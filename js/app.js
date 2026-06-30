@@ -117,13 +117,20 @@ function initNavToggle() {
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
-  navigator.serviceWorker.register('./sw.js')
-    .then(reg => {
-      console.log('[DramaStream] Service Worker registered. Scope:', reg.scope);
-    })
-    .catch(err => {
-      console.warn('[DramaStream] Service Worker registration failed:', err);
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (const registration of registrations) {
+      registration.unregister();
+      console.log('[DramaStream] Service Worker unregistered.');
+    }
+  });
+
+  if ('caches' in window) {
+    caches.keys().then(names => {
+      for (const name of names) {
+        caches.delete(name);
+      }
     });
+  }
 }
 
 /* ── Init ────────────────────────────────────────────────────── */
