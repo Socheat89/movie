@@ -236,13 +236,40 @@ function bindDramaTabEvents() {
 
     showToast('Fetching movie details... Please wait.', 'info');
     
+    let html = '';
+    let success = false;
+    let fetchError = null;
+
+    const proxyBuilders = [
+      url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      url => `https://yacdn.org/proxy/${url}`
+    ];
+
+    for (const buildProxyUrl of proxyBuilders) {
+      const proxyUrl = buildProxyUrl(url);
+      try {
+        console.log(`[Import] Fetching via: ${proxyUrl}`);
+        const response = await fetch(proxyUrl);
+        if (response.ok) {
+          html = await response.text();
+          if (html && html.trim().length > 0) {
+            success = true;
+            break;
+          }
+        }
+      } catch (e) {
+        console.warn(`[Import] Failed fetch with proxy: ${proxyUrl}`, e);
+        fetchError = e;
+      }
+    }
+
+    if (!success) {
+      showToast('CORS proxy servers are unreachable. Please try again later.', 'error');
+      return;
+    }
+
     try {
-      // Use AllOrigins proxy to bypass CORS
-      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-      const response = await fetch(proxyUrl);
-      if (!response.ok) throw new Error('Failed to fetch from website.');
-      
-      const html = await response.text();
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
 
@@ -325,7 +352,7 @@ function bindDramaTabEvents() {
 
     } catch (err) {
       console.error(err);
-      showToast('Failed to fetch/parse the website data. Check your URL.', 'error');
+      showToast('Failed to parse the website data. Check page structure.', 'error');
     }
   });
 
