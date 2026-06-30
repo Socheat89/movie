@@ -165,6 +165,13 @@ function buildDramasTab() {
   return `
     <div class="admin-toolbar" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;width:100%;">
       <input class="search-input" type="search" id="drama-search" placeholder="🔍 Search dramas…" value="" style="flex:1;min-width:200px;">
+      
+      <!-- Import from URL Form -->
+      <div style="display:flex;gap:6px;align-items:center;flex:2;min-width:300px;">
+        <input class="form-input" type="url" id="import-url-input" placeholder="Paste KhmerKomsan URL (e.g. watch.php?vid=...)" style="margin:0;flex:1;">
+        <button class="btn btn-ghost" id="btn-import-url">⚡ Fetch &amp; Import</button>
+      </div>
+
       <button class="btn btn-ghost" id="btn-upload-json" style="display:flex;align-items:center;gap:6px;">📂 Upload JSON</button>
       <input type="file" id="json-file-input" accept=".json" style="display:none;">
       <button class="btn btn-primary" id="btn-add-drama">+ Add Drama</button>
@@ -217,6 +224,110 @@ function buildDramaRows(dramas) {
 function bindDramaTabEvents() {
   /* Add */
   document.getElementById('btn-add-drama')?.addEventListener('click', () => showDramaModal(null));
+
+  /* Import from URL */
+  document.getElementById('btn-import-url')?.addEventListener('click', async () => {
+    const urlInput = document.getElementById('import-url-input');
+    const url = urlInput?.value.trim();
+    if (!url) {
+      showToast('Please paste a valid website URL first.', 'error');
+      return;
+    }
+
+    showToast('Fetching movie details... Please wait.', 'info');
+    
+    try {
+      // Use AllOrigins proxy to bypass CORS
+      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+      const response = await fetch(proxyUrl);
+      if (!response.ok) throw new Error('Failed to fetch from website.');
+      
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // 1. Extract Title
+      let title = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || doc.querySelector('h3.fst-italic')?.textContent;
+      if (title) {
+        title = title.replace(/\[\d+\.END\]/gi, '').replace(/\[\d+\.EP\]/gi, '').trim();
+      } else {
+        title = 'Scraped Drama';
+      }
+
+      // 2. Extract Description
+      const description = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || 'No description found.';
+
+      // 3. Extract Poster Image
+      const poster = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || 'https://picsum.photos/300/450';
+
+      // 4. Extract Category/Genre
+      const genre = 'Action'; // default
+
+      // 5. Extract Episodes array
+      let episodes = [];
+      const scripts = doc.querySelectorAll('script');
+      let foundScript = false;
+      for (const s of scripts) {
+        if (s.textContent.includes('const videos =')) {
+          const match = s.textContent.match(/const\s+videos\s*=\s*(\[[\s\S]*?\])/);
+          if (match) {
+            try {
+              const getArray = new Function(`return ${match[1]};`);
+              const videos = getArray();
+              if (Array.isArray(videos)) {
+                episodes = videos.map((v, idx) => ({
+                  id: 'ep_' + Date.now() + '_' + idx,
+                  episode: idx + 1,
+                  title: v.title || `Episode ${idx + 1}`,
+                  videoUrl: v.file || v.videoUrl || ''
+                }));
+                foundScript = true;
+              }
+            } catch (e) {
+              console.error('Failed parsing videos array:', e);
+            }
+          }
+          break;
+        }
+      }
+
+      if (!foundScript) {
+        showToast('Could not find any episode videos list on this page.', 'error');
+        return;
+      }
+
+      // Create imported drama structure
+      const importedDrama = {
+        id: 'scraped_' + Date.now(),
+        title: title,
+        titleKhmer: title,
+        description: description,
+        poster: poster,
+        genre: genre,
+        trending: true,
+        createdAt: Date.now(),
+        episodes: episodes
+      };
+
+      const db = DB.get();
+      const exists = db.dramas.some(d => d.title === importedDrama.title);
+      if (exists) {
+        showToast(`Drama "${importedDrama.title}" already exists in the database.`, 'error');
+        return;
+      }
+
+      db.dramas.unshift(importedDrama);
+      DB.save(db);
+
+      showToast(`Successfully fetched & imported "${importedDrama.title}" (${episodes.length} episodes)! 🎉`, 'success');
+      if (urlInput) urlInput.value = '';
+      renderDashboard(document.getElementById('main-content'));
+
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to fetch/parse the website data. Check your URL.', 'error');
+    }
+  });
 
   /* Upload JSON */
   const fileInput = document.getElementById('json-file-input');
