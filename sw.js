@@ -4,7 +4,7 @@
    Network-first for dynamic content
 =========================== */
 
-const CACHE_NAME = 'dramastream-v1.0';
+const CACHE_NAME = 'dramastream-v1.1';
 const SHELL_ASSETS = [
   './',
   './index.html',
