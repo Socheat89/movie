@@ -283,6 +283,30 @@ const DB = (function () {
       console.log('[DB] Store reset to seed data.');
     },
 
+    /* Import a drama dynamically from a JSON file path/URL */
+    async importFromJson(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const drama = await response.json();
+        
+        const db = this.get();
+        const exists = db.dramas.some(d => d.id === drama.id || d.title === drama.title);
+        if (!exists) {
+          // Adjust structure slightly if JSON has fields that don't match seed expectations
+          if (!drama.createdAt) drama.createdAt = Date.now();
+          db.dramas.unshift(drama);
+          this.save(db);
+          console.log(`[DB] Successfully imported drama "${drama.title}" from ${url}`);
+          return true;
+        }
+        return false;
+      } catch (e) {
+        console.error(`[DB] Failed to import from JSON at ${url}:`, e);
+        return false;
+      }
+    },
+
     /* ── Migration: inject built-in dramas if missing ────────── */
     patchBuiltins() {
       const db     = this.get();
@@ -684,6 +708,71 @@ const DB = (function () {
 
         this.save(db);
         console.log('[DB] Patched: Lor Hann Taing 18 added (45 episodes).');
+      }
+
+      /* ── Nak Bakdevot Kom Mouynist Chen Mao Tse Toung (អ្នកបដិវត្តន៍កុម្មុយនីស្តចិន ម៉ៅសេទុង) ── */
+      if (!titles.includes('Nak Bakdevot Kom Mouynist Chen Mao Tse Toung')) {
+        const epsMao = [
+          { id:'mt_01',  title:'Episode 1',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/f4/s8/2/g/j/n/6/gjn6z.aaa.mp4' },
+          { id:'mt_02',  title:'Episode 2',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/f7/s8/2/S/j/n/6/Sjn6z.aaa.mp4' },
+          { id:'mt_03',  title:'Episode 3',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/ec/s8/2/y/k/n/6/ykn6z.aaa.mp4' },
+          { id:'mt_04',  title:'Episode 4',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/4f/s8/2/-/k/n/6/-kn6z.aaa.mp4' },
+          { id:'mt_05',  title:'Episode 5',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/e0/s8/2/w/l/n/6/wln6z.aaa.mp4' },
+          { id:'mt_06',  title:'Episode 6',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/5d/s8/2/y/l/n/6/yln6z.aaa.mp4' },
+          { id:'mt_07',  title:'Episode 7',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/1f/s8/2/W/l/n/6/Wln6z.aaa.mp4' },
+          { id:'mt_08',  title:'Episode 8',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/2e/s8/2/S/l/n/6/Sln6z.aaa.mp4' },
+          { id:'mt_09',  title:'Episode 9',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/96/s8/2/0/l/n/6/0ln6z.aaa.mp4' },
+          { id:'mt_10',  title:'Episode 10',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/3f/s8/2/M/l/n/6/Mln6z.aaa.mp4' },
+          { id:'mt_11',  title:'Episode 11',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/3d/s8/2/g/Z/o/6/gZo6z.aaa.mp4' },
+          { id:'mt_12',  title:'Episode 12',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/b2/s8/2/i/0/o/6/i0o6z.aaa.mp4' },
+          { id:'mt_13',  title:'Episode 13',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/c4/s8/2/q/1/o/6/q1o6z.aaa.mp4' },
+          { id:'mt_14',  title:'Episode 14',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/ce/s8/2/S/1/o/6/S1o6z.aaa.mp4' },
+          { id:'mt_15',  title:'Episode 15',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/d2/s8/2/Y/1/o/6/Y1o6z.aaa.mp4' },
+          { id:'mt_16',  title:'Episode 16',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/a5/s8/2/6/1/o/6/61o6z.aaa.mp4' },
+          { id:'mt_17',  title:'Episode 17',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/db/s8/2/E/2/o/6/E2o6z.aaa.mp4' },
+          { id:'mt_18',  title:'Episode 18',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/ce/s8/2/U/2/o/6/U2o6z.aaa.mp4' },
+          { id:'mt_19',  title:'Episode 19',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/9b/s8/2/0/2/o/6/02o6z.aaa.mp4' },
+          { id:'mt_20',  title:'Episode 20',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/60/s8/2/Y/2/o/6/Y2o6z.aaa.mp4' },
+          { id:'mt_21',  title:'Episode 21',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/7c/s8/2/g/3/o/6/g3o6z.aaa.mp4' },
+          { id:'mt_22',  title:'Episode 22',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/6f/s8/2/o/3/o/6/o3o6z.aaa.mp4' },
+          { id:'mt_23',  title:'Episode 23',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/77/s8/2/m/3/o/6/m3o6z.aaa.mp4' },
+          { id:'mt_24',  title:'Episode 24',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/a3/s8/2/-/Z/o/6/-Zo6z.aaa.mp4' },
+          { id:'mt_25',  title:'Episode 25',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/4e/s8/2/S/W/r/6/SWr6z.aaa.mp4' },
+          { id:'mt_26',  title:'Episode 26',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/38/s8/2/4/X/r/6/4Xr6z.aaa.mp4' },
+          { id:'mt_27',  title:'Episode 27',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/38/s8/2/M/Y/r/6/MYr6z.aaa.mp4' },
+          { id:'mt_28',  title:'Episode 28',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/f3/s8/2/I/Z/r/6/IZr6z.aaa.mp4' },
+          { id:'mt_29',  title:'Episode 29',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/56/s8/2/S/Z/r/6/SZr6z.aaa.mp4' },
+          { id:'mt_30',  title:'Episode 30',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/c7/s8/2/S/0/r/6/S0r6z.aaa.mp4' },
+          { id:'mt_31',  title:'Episode 31',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/26/s8/2/e/1/r/6/e1r6z.aaa.mp4' },
+          { id:'mt_32',  title:'Episode 32',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/90/s8/2/q/1/r/6/q1r6z.aaa.mp4' },
+          { id:'mt_33',  title:'Episode 33',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/d2/s8/2/o/1/r/6/o1r6z.aaa.mp4' },
+          { id:'mt_34',  title:'Episode 34',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/e2/s8/2/u/1/r/6/u1r6z.aaa.mp4' },
+          { id:'mt_35',  title:'Episode 35',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/4c/s8/2/w/1/r/6/w1r6z.aaa.mp4' },
+          { id:'mt_36',  title:'Episode 36',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/0f/s8/2/M/-/t/6/M-t6z.aaa.mp4' },
+          { id:'mt_37',  title:'Episode 37',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/a7/s8/2/k/_/t/6/k_t6z.aaa.mp4' },
+          { id:'mt_38',  title:'Episode 38',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/59/s8/2/0/_/t/6/0_t6z.aaa.mp4' },
+          { id:'mt_39',  title:'Episode 39',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/04/s8/2/k/a/u/6/kau6z.aaa.mp4' },
+          { id:'mt_40',  title:'Episode 40',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/21/s8/2/u/a/u/6/uau6z.aaa.mp4' },
+          { id:'mt_41',  title:'Episode 41',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/4e/s8/2/A/a/u/6/Aau6z.aaa.mp4' },
+          { id:'mt_42',  title:'Episode 42',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/74/s8/2/K/a/u/6/Kau6z.aaa.mp4' },
+          { id:'mt_43',  title:'Episode 43',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/59/s8/2/Y/a/u/6/Yau6z.aaa.mp4' },
+          { id:'mt_44',  title:'Episode 44',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/bb/s8/2/M/a/u/6/Mau6z.aaa.mp4' },
+          { id:'mt_45',  title:'Episode 45 (END)', videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/6c/s8/2/0/a/u/6/0au6z.aaa.mp4' }
+        ];
+
+        db.dramas.unshift({
+          id:          'mao-tse-toung',
+          title:       'Nak Bakdevot Kom Mouynist Chen Mao Tse Toung',
+          description: 'អ្នកបដិវត្តន៍កុម្មុយនីស្តចិន ម៉ៅសេទុង — រឿងភាគប្រវត្តិសាស្ត្រដ៏អស្ចារ្យ ដែលបង្ហាញពីជីវិត ការតស៊ូ និងដំណើរការដឹកនាំបដិវត្តន៍របស់លោកប្រធាន ម៉ៅ សេទុង ក្នុងការបង្កើតសាធារណរដ្ឋប្រជាមានិតចិន ។',
+          poster:      'https://www.khmerkomsan.net/uploads/thumbs/f3af0657a-1.jpg',
+          genre:       'Biography',
+          trending:    true,
+          createdAt:   Date.now(),
+          episodes:    epsMao
+        });
+
+        this.save(db);
+        console.log('[DB] Patched: Nak Bakdevot Kom Mouynist Chen Mao Tse Toung added (45 episodes).');
       }
     }
   };

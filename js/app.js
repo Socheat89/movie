@@ -129,9 +129,27 @@ function registerServiceWorker() {
 /* ── Init ────────────────────────────────────────────────────── */
 window.addEventListener('hashchange', router);
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   DB.patchBuiltins();   // inject built-in dramas (Sdach Sva 2023, etc.)
   initNavToggle();
   router();
   registerServiceWorker();
+
+  // Async load the newly scraped JSON files from the server
+  const externalJsonFiles = [
+    './data/chakraphop-chhing-i.json',
+    './data/chakraphop-chhing-ii.json',
+    './data/chakraphop-chhing-iii.json',
+    './data/lor-hann-taing-18.json',
+    './data/mao-tse-toung.json'
+  ];
+  let importedAny = false;
+  for (const url of externalJsonFiles) {
+    const success = await DB.importFromJson(url);
+    if (success) importedAny = true;
+  }
+  if (importedAny) {
+    console.log('[DramaStream] Loaded new JSON data. Refreshing UI...');
+    router(); // Re-render pages (like Home) with new items
+  }
 });
