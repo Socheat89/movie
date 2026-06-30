@@ -418,6 +418,273 @@ const DB = (function () {
         this.save(db);
         console.log('[DB] Patched: Sdach Sva 2023 added (111 episodes).');
       }
+
+      /* ── Chakraphop Chhing I (ចក្រភពឆ្ងាយ I) ───────────────── */
+      if (!titles.includes('Chakraphop Chhing I')) {
+        const epsChak = [
+          { id:'ck01',  title:'Episode 1',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/q/d/7/i/qd7iv.caa.mp4' },
+          { id:'ck02',  title:'Episode 2',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/x/f/7/i/xf7iv.caa.mp4' },
+          { id:'ck03',  title:'Episode 3',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/B/e/7/i/Be7iv.caa.mp4' },
+          { id:'ck04',  title:'Episode 4',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/J/c/7/i/Jc7iv.caa.mp4' },
+          { id:'ck05',  title:'Episode 5',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/u/c/7/i/uc7iv.caa.mp4' },
+          { id:'ck06',  title:'Episode 6',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/W/Z/A/j/WZAjv.caa.mp4' },
+          { id:'ck07',  title:'Episode 7',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/B/l/B/j/BlBjv.caa.mp4' },
+          { id:'ck08',  title:'Episode 8',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/e/n/B/j/enBjv.caa.mp4' },
+          { id:'ck09',  title:'Episode 9',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/T/D/B/j/TDBjv.caa.mp4' },
+          { id:'ck10',  title:'Episode 10',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/c/K/B/j/cKBjv.caa.mp4' },
+          { id:'ck11',  title:'Episode 11',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/s/V/B/j/sVBjv.caa.mp4' },
+          { id:'ck12',  title:'Episode 12',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/t/R/B/j/tRBjv.caa.mp4' },
+          { id:'ck13',  title:'Episode 13',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/G/Z/B/j/GZBjv.caa.mp4' },
+          { id:'ck14',  title:'Episode 14',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/r/Z/B/j/rZBjv.caa.mp4' },
+          { id:'ck15',  title:'Episode 15',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/V/Z/B/j/VZBjv.caa.mp4' },
+          { id:'ck16',  title:'Episode 16',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/S/s/5/j/Ss5jv.caa.mp4' },
+          { id:'ck17',  title:'Episode 17',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/3/X/5/j/3X5jv.caa.mp4' },
+          { id:'ck18',  title:'Episode 18',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/g/Y/5/j/gY5jv.caa.mp4' },
+          { id:'ck19',  title:'Episode 19',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/a/g/7/j/ag7jv.caa.mp4' },
+          { id:'ck20',  title:'Episode 20',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/3/8/6/j/386jv.caa.mp4' },
+          { id:'ck21',  title:'Episode 21',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/7/v/8/j/7v8jv.caa.mp4' },
+          { id:'ck22',  title:'Episode 22',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/h/e/8/j/he8jv.caa.mp4' },
+          { id:'ck23',  title:'Episode 23',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/G/y/8/j/Gy8jv.caa.mp4' },
+          { id:'ck24',  title:'Episode 24',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/f/Q/8/j/fQ8jv.caa.mp4' },
+          { id:'ck25',  title:'Episode 25',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/Q/S/8/j/QS8jv.caa.mp4' },
+          { id:'ck26',  title:'Episode 26',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/N/4/8/j/N48jv.caa.mp4' },
+          { id:'ck27',  title:'Episode 27',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/q/6/8/j/q68jv.caa.mp4' },
+          { id:'ck28',  title:'Episode 28',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/C/g/9/j/Cg9jv.caa.mp4' },
+          { id:'ck29',  title:'Episode 29',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/H/J/8/j/HJ8jv.caa.mp4' },
+          { id:'ck30',  title:'Episode 30',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/f/i/9/j/fi9jv.caa.mp4' },
+          { id:'ck31',  title:'Episode 31',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/s/b/9/j/sb9jv.caa.mp4' },
+          { id:'ck32',  title:'Episode 32',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/2/h/9/j/2h9jv.caa.mp4' },
+          { id:'ck33',  title:'Episode 33',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/v/e/9/j/ve9jv.caa.mp4' },
+          { id:'ck34',  title:'Episode 34',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/B/k/9/j/Bk9jv.caa.mp4' },
+          { id:'ck35',  title:'Episode 35',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/z/d/9/j/zd9jv.caa.mp4' },
+          { id:'ck36',  title:'Episode 36',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/I/1/-/j/I1-jv.caa.mp4' },
+          { id:'ck37',  title:'Episode 37',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/c/9/-/j/c9-jv.caa.mp4' },
+          { id:'ck38',  title:'Episode 38',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/6/-/-/j/6--jv.caa.mp4' },
+          { id:'ck39',  title:'Episode 39',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/j/_/-/j/j_-jv.caa.mp4' },
+          { id:'ck40',  title:'Episode 40',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/J/a/_/j/Ja_jv.caa.mp4' },
+          { id:'ck41',  title:'Episode 41',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/q/b/_/j/qb_jv.caa.mp4' },
+          { id:'ck42',  title:'Episode 42',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/b/b/_/j/bb_jv.caa.mp4' },
+          { id:'ck43',  title:'Episode 43',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/v/8/-/j/v8-jv.caa.mp4' },
+          { id:'ck44',  title:'Episode 44',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/D/6/-/j/D6-jv.caa.mp4' },
+          { id:'ck45',  title:'Episode 45',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/y/_/-/j/y_-jv.caa.mp4' },
+          { id:'ck46',  title:'Episode 46',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/p/o/1/k/po1kv.caa.mp4' },
+          { id:'ck47',  title:'Episode 47',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/i/B/1/k/iB1kv.caa.mp4' },
+          { id:'ck48',  title:'Episode 48',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/c/K/1/k/cK1kv.caa.mp4' },
+          { id:'ck49',  title:'Episode 49',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/G/K/1/k/GK1kv.caa.mp4' },
+          { id:'ck50',  title:'Episode 50',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/Z/J/1/k/ZJ1kv.caa.mp4' },
+          { id:'ck51',  title:'Episode 51 (END)', videoUrl:'https://hugh.cdn.rumble.cloud/video/fw/s8/2/N/1/1/k/N11kv.caa.mp4' },
+        ];
+
+        db.dramas.unshift({
+          id:          'chakraphop-chhing-i',
+          title:       'Chakraphop Chhing I',
+          description: 'ចក្រភពឆ្ងាយ I — រឿងភាគចិនដ៏ល្បីល្បាញ ដែលនិយាយអំពីការតស៊ូ ស្នេហ៍ និងអំណាចនៅក្នុងអាណាចក្រ ។ ត្រូវបានស្វាគមន៍ដ៏ខ្លាំងពីអ្នកទស្សនា ។',
+          poster:      'https://www.khmerkomsan.net/uploads/thumbs/b4465e786-1.jpg',
+          genre:       'Action',
+          trending:    true,
+          createdAt:   Date.now(),
+          episodes:    epsChak
+        });
+
+        this.save(db);
+        console.log('[DB] Patched: Chakraphop Chhing I added (51 episodes).');
+      }
+
+      /* ── Chakraphop Chhing II (ចក្រភពឆ្ងាយ II) ───────────────── */
+      if (!titles.includes('Chakraphop Chhing II')) {
+        const epsChak2 = [
+          { id:'ck2_01',  title:'Episode 1',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/d2/s8/2/9/M/Y/-/9MY-x.caa.mp4' },
+          { id:'ck2_02',  title:'Episode 2',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/cb/s8/2/A/6/Y/-/A6Y-x.caa.mp4' },
+          { id:'ck2_03',  title:'Episode 3',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/18/s8/2/g/_/Y/-/g_Y-x.caa.mp4' },
+          { id:'ck2_04',  title:'Episode 4',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/b8/s8/2/j/c/Z/-/jcZ-x.caa.mp4' },
+          { id:'ck2_05',  title:'Episode 5',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/d4/s8/2/m/F/0/-/mF0-x.caa.mp4' },
+          { id:'ck2_06',  title:'Episode 6',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/91/s8/2/t/H/0/-/tH0-x.caa.mp4' },
+          { id:'ck2_07',  title:'Episode 7',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/28/s8/2/i/G/0/-/iG0-x.caa.mp4' },
+          { id:'ck2_08',  title:'Episode 8',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/72/s8/2/8/I/0/-/8I0-x.caa.mp4' },
+          { id:'ck2_09',  title:'Episode 9',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/ba/s8/2/P/J/0/-/PJ0-x.caa.mp4' },
+          { id:'ck2_10',  title:'Episode 10',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/66/s8/2/L/K/0/-/LK0-x.caa.mp4' },
+          { id:'ck2_11',  title:'Episode 11',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/37/s8/2/x/t/7/-/xt7-x.caa.mp4' },
+          { id:'ck2_12',  title:'Episode 12',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/4b/s8/2/V/R/7/-/VR7-x.caa.mp4' },
+          { id:'ck2_13',  title:'Episode 13',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/58/s8/2/y/8/7/-/y87-x.caa.mp4' },
+          { id:'ck2_14',  title:'Episode 14',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/f3/s8/2/P/0/7/-/P07-x.caa.mp4' },
+          { id:'ck2_15',  title:'Episode 15',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/fe/s8/2/3/h/8/-/3h8-x.caa.mp4' },
+          { id:'ck2_16',  title:'Episode 16',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/58/s8/2/n/k/8/-/nk8-x.caa.mp4' },
+          { id:'ck2_17',  title:'Episode 17',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/ac/s8/2/h/e/8/-/he8-x.caa.mp4' },
+          { id:'ck2_18',  title:'Episode 18',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/80/s8/2/7/v/8/-/7v8-x.caa.mp4' },
+          { id:'ck2_19',  title:'Episode 19',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/ed/s8/2/O/w/8/-/Ow8-x.caa.mp4' },
+          { id:'ck2_20',  title:'Episode 20',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/13/s8/2/u/m/8/-/um8-x.caa.mp4' },
+          { id:'ck2_21',  title:'Episode 21',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/7b/s8/2/W/1/_/-/W1_-x.caa.mp4' },
+          { id:'ck2_22',  title:'Episode 22',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/f0/s8/2/S/2/_/-/S2_-x.caa.mp4' },
+          { id:'ck2_23',  title:'Episode 23',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/74/s8/2/k/3/_/-/k3_-x.caa.mp4' },
+          { id:'ck2_24',  title:'Episode 24',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/21/s8/2/G/5/_/-/G5_-x.caa.mp4' },
+          { id:'ck2_25',  title:'Episode 25',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/0d/s8/2/U/9/_/-/U9_-x.caa.mp4' },
+          { id:'ck2_26',  title:'Episode 26',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/2c/s8/2/u/8/_/-/u8_-x.caa.mp4' },
+          { id:'ck2_27',  title:'Episode 27',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/2c/s8/2/B/-/_/-/B-_-x.caa.mp4' },
+          { id:'ck2_28',  title:'Episode 28',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/fc/s8/2/E/b/a/_/Eba_x.caa.mp4' },
+          { id:'ck2_29',  title:'Episode 29',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/c1/s8/2/9/9/_/-/99_-x.caa.mp4' },
+          { id:'ck2_30',  title:'Episode 30',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/fa/s8/2/8/b/a/_/8ba_x.caa.mp4' },
+          { id:'ck2_31',  title:'Episode 31',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/54/s8/2/b/9/v/b/b9vby.caa.mp4' },
+          { id:'ck2_32',  title:'Episode 32',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/e3/s8/2/z/g/w/b/zgwby.caa.mp4' },
+          { id:'ck2_33',  title:'Episode 33',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/c4/s8/2/t/p/w/b/tpwby.caa.mp4' },
+          { id:'ck2_34',  title:'Episode 34',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/9b/s8/2/6/y/w/b/6ywby.caa.mp4' },
+          { id:'ck2_35',  title:'Episode 35',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/08/s8/2/K/w/w/b/Kwwby.caa.mp4' },
+          { id:'ck2_36',  title:'Episode 36',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/0d/s8/2/h/7/x/b/h7xby.caa.mp4' },
+          { id:'ck2_37',  title:'Episode 37',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/a9/s8/2/v/_/x/b/v_xby.caa.mp4' },
+          { id:'ck2_38',  title:'Episode 38',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/89/s8/2/k/-/x/b/k-xby.caa.mp4' },
+          { id:'ck2_39',  title:'Episode 39',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/79/s8/2/z/-/x/b/z-xby.caa.mp4' },
+          { id:'ck2_40',  title:'Episode 40',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/1b/s8/2/K/_/x/b/K_xby.caa.mp4' },
+          { id:'ck2_41',  title:'Episode 41',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/c6/s8/2/G/r/F/b/GrFby.caa.mp4' },
+          { id:'ck2_42',  title:'Episode 42',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/6c/s8/2/G/G/F/b/GGFby.caa.mp4' },
+          { id:'ck2_43',  title:'Episode 43',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/2e/s8/2/T/z/F/b/TzFby.caa.mp4' },
+          { id:'ck2_44',  title:'Episode 44',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/0e/s8/2/b/K/F/b/bKFby.caa.mp4' },
+          { id:'ck2_45',  title:'Episode 45',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/ba/s8/2/a/O/F/b/aOFby.caa.mp4' },
+          { id:'ck2_46',  title:'Episode 46',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/b3/s8/2/p/O/F/b/pOFby.caa.mp4' },
+          { id:'ck2_47',  title:'Episode 47',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/cf/s8/2/H/R/F/b/HRFby.caa.mp4' },
+          { id:'ck2_48',  title:'Episode 48',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/98/s8/2/_/R/F/b/_RFby.caa.mp4' },
+          { id:'ck2_49',  title:'Episode 49',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/ea/s8/2/w/Q/F/b/wQFby.caa.mp4' },
+          { id:'ck2_50',  title:'Episode 50',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/d8/s8/2/D/S/F/b/DSFby.caa.mp4' },
+          { id:'ck2_51',  title:'Episode 51 (END)', videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe1/da/s8/2/S/S/F/b/SSFby.caa.mp4' },
+        ];
+
+        db.dramas.unshift({
+          id:          'chakraphop-chhing-ii',
+          title:       'Chakraphop Chhing II',
+          description: 'ចក្រភពឆ្ងាយ II — រឿងភាគចិនដ៏ល្បីល្បាញ ដែលនិយាយអំពីការតស៊ូ ស្នេហ៍ និងអំណាចនៅក្នុងអាណាចក្រ (វគ្គ ២) ។ ត្រូវបានស្វាគមន៍ដ៏ខ្លាំងពីអ្នកទស្សនា ។',
+          poster:      'https://www.khmerkomsan.net/uploads/thumbs/9eb8185c3-1.jpg',
+          genre:       'Action',
+          trending:    true,
+          createdAt:   Date.now(),
+          episodes:    epsChak2
+        });
+
+        this.save(db);
+        console.log('[DB] Patched: Chakraphop Chhing II added (51 episodes).');
+      }
+
+      /* ── Chakraphop Chhing III (ចក្រភពឆ្ងាយ III) ────────────── */
+      if (!titles.includes('Chakraphop Chhing III')) {
+        const epsChak3 = [
+          { id:'ck3_01',  title:'Episode 1',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/88/s8/2/q/F/t/H/qFtHz.aaa.mp4' },
+          { id:'ck3_02',  title:'Episode 2',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/86/s8/2/q/N/t/H/qNtHz.aaa.mp4' },
+          { id:'ck3_03',  title:'Episode 3',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/36/s8/2/o/_/t/H/o_tHz.aaa.mp4' },
+          { id:'ck3_04',  title:'Episode 4',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/2e/s8/2/G/_/t/H/G_tHz.aaa.mp4' },
+          { id:'ck3_05',  title:'Episode 5',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/99/s8/2/m/a/u/H/mauHz.aaa.mp4' },
+          { id:'ck3_06',  title:'Episode 6',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/f5/s8/2/e/a/u/H/eauHz.aaa.mp4' },
+          { id:'ck3_07',  title:'Episode 7',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/d9/s8/2/q/3/t/H/q3tHz.aaa.mp4' },
+          { id:'ck3_08',  title:'Episode 8',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/2a/s8/2/q/J/t/H/qJtHz.aaa.mp4' },
+          { id:'ck3_09',  title:'Episode 9',   videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/94/s8/2/U/K/t/H/UKtHz.aaa.mp4' },
+          { id:'ck3_10',  title:'Episode 10',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/0c/s8/2/M/G/t/H/MGtHz.aaa.mp4' },
+          { id:'ck3_11',  title:'Episode 11',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/42/s8/2/U/s/y/H/UsyHz.aaa.mp4' },
+          { id:'ck3_12',  title:'Episode 12',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/eb/s8/2/-/j/y/H/-jyHz.aaa.mp4' },
+          { id:'ck3_13',  title:'Episode 13',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/40/s8/2/s/-/t/H/s-tHz.aaa.mp4' },
+          { id:'ck3_14',  title:'Episode 14',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/4b/s8/2/Y/-/t/H/Y-tHz.aaa.mp4' },
+          { id:'ck3_15',  title:'Episode 15',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/3d/s8/2/0/-/t/H/0-tHz.aaa.mp4' },
+          { id:'ck3_16',  title:'Episode 16',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/22/s8/2/Y/L/u/H/YLuHz.aaa.mp4' },
+          { id:'ck3_17',  title:'Episode 17',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/3d/s8/2/4/P/u/H/4PuHz.aaa.mp4' },
+          { id:'ck3_18',  title:'Episode 18',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/fb/s8/2/8/P/u/H/8PuHz.aaa.mp4' },
+          { id:'ck3_19',  title:'Episode 19',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/6b/s8/2/a/U/u/H/aUuHz.aaa.mp4' },
+          { id:'ck3_20',  title:'Episode 20',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/d3/s8/2/c/S/u/H/cSuHz.aaa.mp4' },
+          { id:'ck3_21',  title:'Episode 21',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/1b/s8/2/Y/T/u/H/YTuHz.aaa.mp4' },
+          { id:'ck3_22',  title:'Episode 22',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/53/s8/2/U/T/u/H/UTuHz.aaa.mp4' },
+          { id:'ck3_23',  title:'Episode 23',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/7b/s8/2/o/R/u/H/oRuHz.aaa.mp4' },
+          { id:'ck3_24',  title:'Episode 24',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/9e/s8/2/-/T/u/H/-TuHz.aaa.mp4' },
+          { id:'ck3_25',  title:'Episode 25',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/69/s8/2/6/J/u/H/6JuHz.aaa.mp4' },
+          { id:'ck3_26',  title:'Episode 26',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/56/s8/2/E/o/v/H/EovHz.aaa.mp4' },
+          { id:'ck3_27',  title:'Episode 27',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/51/s8/2/i/p/v/H/ipvHz.aaa.mp4' },
+          { id:'ck3_28',  title:'Episode 28',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/3c/s8/2/g/p/v/H/gpvHz.aaa.mp4' },
+          { id:'ck3_29',  title:'Episode 29',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/95/s8/2/m/p/v/H/mpvHz.aaa.mp4' },
+          { id:'ck3_30',  title:'Episode 30',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/bd/s8/2/O/o/v/H/OovHz.aaa.mp4' },
+          { id:'ck3_31',  title:'Episode 31',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/a2/s8/2/Y/x/v/H/YxvHz.aaa.mp4' },
+          { id:'ck3_32',  title:'Episode 32',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/a1/s8/2/2/x/v/H/2xvHz.aaa.mp4' },
+          { id:'ck3_33',  title:'Episode 33',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/b0/s8/2/a/y/v/H/ayvHz.aaa.mp4' },
+          { id:'ck3_34',  title:'Episode 34',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/0c/s8/2/i/V/v/H/iVvHz.aaa.mp4' },
+          { id:'ck3_35',  title:'Episode 35',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/b9/s8/2/G/V/v/H/GVvHz.aaa.mp4' },
+          { id:'ck3_36',  title:'Episode 36',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/20/s8/2/2/V/v/H/2VvHz.aaa.mp4' },
+          { id:'ck3_37',  title:'Episode 37',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/7b/s8/2/6/V/v/H/6VvHz.aaa.mp4' },
+          { id:'ck3_38',  title:'Episode 38',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/f1/s8/2/S/V/v/H/SVvHz.aaa.mp4' },
+          { id:'ck3_39',  title:'Episode 39',  videoUrl:'https://hugh.cdn.rumble.cloud/video/fww1/8e/s8/2/C/V/v/H/CVvHz.aaa.mp4' },
+          { id:'ck3_40',  title:'Episode 40 (END)', videoUrl:'https://hugh.cdn.rumble.cloud/video/fwe2/36/s8/2/I/O/v/H/IOvHz.aaa.mp4' },
+        ];
+
+        db.dramas.unshift({
+          id:          'chakraphop-chhing-iii',
+          title:       'Chakraphop Chhing III',
+          description: 'ចក្រភពឆ្ងាយ III — រឿងភាគចិនដ៏ល្បីល្បាញ ដែលនិយាយអំពីការតស៊ូ ស្នេហ៍ និងអំណាចនៅក្នុងអាណាចក្រ (វគ្គ ៣) ។ ត្រូវបានស្វាគមន៍ដ៏ខ្លាំងពីអ្នកទស្សនា ។',
+          poster:      'https://www.khmerkomsan.net/uploads/thumbs/eafc0f5aa-1.jpg',
+          genre:       'Action',
+          trending:    true,
+          createdAt:   Date.now(),
+          episodes:    epsChak3
+        });
+
+        this.save(db);
+        console.log('[DB] Patched: Chakraphop Chhing III added (40 episodes).');
+      }
+
+      /* ── Lor Hann Taing 18 (ឡូហានទាំង ១៨) ───────────────────── */
+      if (!titles.includes('Lor Hann Taing 18')) {
+        const epsLohan = [
+          { id:'lh_01',  title:'Episode 1',   videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/U/X/8/a/UX8aq.aaa.mp4' },
+          { id:'lh_02',  title:'Episode 2',   videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/1/Z/8/a/1Z8aq.aaa.mp4' },
+          { id:'lh_03',  title:'Episode 3',   videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/D/Z/8/a/DZ8aq.aaa.mp4' },
+          { id:'lh_04',  title:'Episode 4',   videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/H/V/8/a/HV8aq.aaa.mp4' },
+          { id:'lh_05',  title:'Episode 5',   videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/6/p/z/v/6pzvq.aaa.mp4' },
+          { id:'lh_06',  title:'Episode 6',   videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/P/7/9/a/P79aq.aaa.mp4' },
+          { id:'lh_07',  title:'Episode 7',   videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/q/-/9/a/q-9aq.aaa.mp4' },
+          { id:'lh_08',  title:'Episode 8',   videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/e/_/9/a/e_9aq.aaa.mp4' },
+          { id:'lh_09',  title:'Episode 9',   videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/4/b/-/a/4b-aq.aaa.mp4' },
+          { id:'lh_10',  title:'Episode 10',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/G/b/-/a/Gb-aq.aaa.mp4' },
+          { id:'lh_11',  title:'Episode 11',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/s/d/-/a/sd-aq.aaa.mp4' },
+          { id:'lh_12',  title:'Episode 12',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/5/d/-/a/5d-aq.aaa.mp4' },
+          { id:'lh_13',  title:'Episode 13',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/M/e/-/a/Me-aq.aaa.mp4' },
+          { id:'lh_14',  title:'Episode 14',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/s/f/-/a/sf-aq.aaa.mp4' },
+          { id:'lh_15',  title:'Episode 15',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/W/f/-/a/Wf-aq.aaa.mp4' },
+          { id:'lh_16',  title:'Episode 16',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/b/j/_/a/bj_aq.aaa.mp4' },
+          { id:'lh_17',  title:'Episode 17',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/F/q/_/a/Fq_aq.aaa.mp4' },
+          { id:'lh_18',  title:'Episode 18',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/-/u/_/a/-u_aq.aaa.mp4' },
+          { id:'lh_19',  title:'Episode 19',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/N/A/_/a/NA_aq.aaa.mp4' },
+          { id:'lh_20',  title:'Episode 20',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/h/C/_/a/hC_aq.aaa.mp4' },
+          { id:'lh_21',  title:'Episode 21',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/F/C/_/a/FC_aq.aaa.mp4' },
+          { id:'lh_22',  title:'Episode 22',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/T/C/_/a/TC_aq.aaa.mp4' },
+          { id:'lh_23',  title:'Episode 23',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/6/C/_/a/6C_aq.aaa.mp4' },
+          { id:'lh_24',  title:'Episode 24',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/9/C/_/a/9C_aq.aaa.mp4' },
+          { id:'lh_25',  title:'Episode 25',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/s/D/_/a/sD_aq.aaa.mp4' },
+          { id:'lh_26',  title:'Episode 26',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/l/Z/_/a/lZ_aq.aaa.mp4' },
+          { id:'lh_27',  title:'Episode 27',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/w/0/_/a/w0_aq.aaa.mp4' },
+          { id:'lh_28',  title:'Episode 28',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/d/1/_/a/d1_aq.aaa.mp4' },
+          { id:'lh_29',  title:'Episode 29',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/7/7/H/w/77Hwq.aaa.mp4' },
+          { id:'lh_30',  title:'Episode 30',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/b/8/H/w/b8Hwq.aaa.mp4' },
+          { id:'lh_31',  title:'Episode 31',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/Z/Y/-/k/ZY-kq.aaa.mp4' },
+          { id:'lh_32',  title:'Episode 32',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/4/Z/-/k/4Z-kq.aaa.mp4' },
+          { id:'lh_33',  title:'Episode 33',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/P/Z/-/k/PZ-kq.aaa.mp4' },
+          { id:'lh_34',  title:'Episode 34',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/w/0/-/k/w0-kq.aaa.mp4' },
+          { id:'lh_35',  title:'Episode 35',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/D/m/7/k/Dm7kq.aaa.mp4' },
+          { id:'lh_36',  title:'Episode 36',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/D/b/a/l/Dbalq.aaa.mp4' },
+          { id:'lh_37',  title:'Episode 37',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/Q/d/a/l/Qdalq.aaa.mp4' },
+          { id:'lh_38',  title:'Episode 38',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/L/f/a/l/Lfalq.aaa.mp4' },
+          { id:'lh_39',  title:'Episode 39',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/V/g/a/l/Vgalq.aaa.mp4' },
+          { id:'lh_40',  title:'Episode 40',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/l/h/a/l/lhalq.aaa.mp4' },
+          { id:'lh_41',  title:'Episode 41',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/7/k/a/l/7kalq.aaa.mp4' },
+          { id:'lh_42',  title:'Episode 42',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/-/k/a/l/-kalq.aaa.mp4' },
+          { id:'lh_43',  title:'Episode 43',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/g/m/a/l/gmalq.aaa.mp4' },
+          { id:'lh_44',  title:'Episode 44',  videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/K/m/a/l/Kmalq.aaa.mp4' },
+          { id:'lh_45',  title:'Episode 45 (END)', videoUrl:'https://hugh.cdn.rumble.cloud/video/s8/2/t/n/a/l/tnalq.aaa.mp4' }
+        ];
+
+        db.dramas.unshift({
+          id:          'lor-hann-taing-18',
+          title:       'Lor Hann Taing 18',
+          description: 'ឡូហានទាំង ១៨ — រឿងភាគចិនបុរាណបែបក្បាច់គុន និងជំនឿព្រះពុទ្ធសាសនាដ៏ល្បីល្បាញ ដែលនិយាយអំពីព្រះអរហន្តទាំង ១៨ អង្គតស៊ូប្រយុទ្ធប្រឆាំងនឹងក្រុមបិសាច និងអំពើអាក្រក់ដើម្បីជួយសង្គ្រោះមនុស្សលោក ។',
+          poster:      'https://www.khmerkomsan.net/uploads/thumbs/ae4082ff8-1.jpg',
+          genre:       'Action',
+          trending:    true,
+          createdAt:   Date.now(),
+          episodes:    epsLohan
+        });
+
+        this.save(db);
+        console.log('[DB] Patched: Lor Hann Taing 18 added (45 episodes).');
+      }
     }
   };
 })();
