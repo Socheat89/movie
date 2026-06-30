@@ -163,8 +163,10 @@ function renderTabBody() {
 function buildDramasTab() {
   const dramas = DB.getDramas();
   return `
-    <div class="admin-toolbar">
-      <input class="search-input" type="search" id="drama-search" placeholder="🔍 Search dramas…" value="">
+    <div class="admin-toolbar" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;width:100%;">
+      <input class="search-input" type="search" id="drama-search" placeholder="🔍 Search dramas…" value="" style="flex:1;min-width:200px;">
+      <button class="btn btn-ghost" id="btn-upload-json" style="display:flex;align-items:center;gap:6px;">📂 Upload JSON</button>
+      <input type="file" id="json-file-input" accept=".json" style="display:none;">
       <button class="btn btn-primary" id="btn-add-drama">+ Add Drama</button>
     </div>
     <div class="admin-table-wrapper">
@@ -215,6 +217,51 @@ function buildDramaRows(dramas) {
 function bindDramaTabEvents() {
   /* Add */
   document.getElementById('btn-add-drama')?.addEventListener('click', () => showDramaModal(null));
+
+  /* Upload JSON */
+  const fileInput = document.getElementById('json-file-input');
+  const uploadBtn = document.getElementById('btn-upload-json');
+
+  uploadBtn?.addEventListener('click', () => {
+    fileInput?.click();
+  });
+
+  fileInput?.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const drama = JSON.parse(evt.target.result);
+        if (!drama.title) {
+          showToast('Invalid JSON: missing drama title.', 'error');
+          return;
+        }
+
+        const db = DB.get();
+        const exists = db.dramas.some(d => d.id === drama.id || d.title === drama.title);
+        if (exists) {
+          showToast(`Drama "${drama.title}" already exists.`, 'error');
+          return;
+        }
+
+        if (!drama.id) drama.id = 'imported_' + Date.now();
+        if (!drama.createdAt) drama.createdAt = Date.now();
+        if (!drama.episodes) drama.episodes = [];
+
+        db.dramas.unshift(drama);
+        DB.save(db);
+
+        showToast(`Successfully imported "${drama.title}"! 🎉`, 'success');
+        renderDashboard(document.getElementById('main-content'));
+      } catch (err) {
+        showToast('Failed to parse JSON file.', 'error');
+      }
+    };
+    reader.readAsText(file);
+    fileInput.value = '';
+  });
 
   /* Live search */
   document.getElementById('drama-search')?.addEventListener('input', e => {
