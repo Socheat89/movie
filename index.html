@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ── Meta ─────────────────────────────────────────────────── -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <!-- ── SEO ──────────────────────────────────────────────────── -->
+  <title>DramaStream — Watch K-Dramas &amp; Asian Series Free</title>
+  <meta name="description" content="DramaStream: Watch the latest Korean dramas, trending series, and classic K-dramas for free. No login, no sign-up. One click to stream." />
+  <meta name="keywords" content="K-drama, Korean drama, Asian drama, watch free, streaming, DramaStream" />
+  <meta name="author" content="DramaStream" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- ── Open Graph ────────────────────────────────────────────── -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="DramaStream — Watch K-Dramas Free" />
+  <meta property="og:description" content="Stream the best Korean & Asian dramas instantly. No login required." />
+  <meta property="og:image"       content="icons/icon-512.png" />
+
+  <!-- ── PWA ───────────────────────────────────────────────────── -->
+  <link rel="manifest"          href="manifest.json" />
+  <meta name="theme-color"      content="#08080e" />
+  <meta name="mobile-web-app-capable"      content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title"  content="DramaStream" />
+
+  <!-- ── Icons ─────────────────────────────────────────────────── -->
+  <link rel="icon"              href="icons/icon-192.png" type="image/png" />
+  <link rel="apple-touch-icon"  href="icons/icon-192.png" />
+
+  <!-- ── Fonts (preconnect for speed) ──────────────────────────── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- ── Stylesheet ────────────────────────────────────────────── -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+  <!-- ════════════════════════════════════════════════════════════
+       SPA SHELL
+  ═════════════════════════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- ── Navigation ─────────────────────────────────────────── -->
+    <nav id="navbar" role="navigation" aria-label="Main navigation">
+      <div class="nav-inner">
+
+        <!-- Logo -->
+        <a href="#/" class="nav-logo" aria-label="DramaStream Home">
+          <div class="logo-icon" aria-hidden="true">▶</div>
+          <span>DramaStream</span>
+        </a>
+
+        <!-- Desktop nav links -->
+        <div class="nav-links" id="nav-links">
+          <a href="#/" class="nav-link" data-route="/" id="nav-home">Home</a>
+        </div>
+
+        <!-- Mobile hamburger -->
+        <button
+          class="nav-menu-btn"
+          id="menuToggle"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+          aria-controls="nav-links"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+      </div>
+    </nav>
+    <!-- /nav -->
+
+    <!-- ── Main Content (router target) ──────────────────────── -->
+    <main id="main-content" role="main" aria-live="polite"></main>
+
+    <!-- ── Footer ─────────────────────────────────────────────── -->
+    <footer class="footer" role="contentinfo">
+      <div class="footer-inner">
+        <div class="footer-logo">
+          <div class="logo-icon" style="width:26px;height:26px;border-radius:7px;font-size:0.75rem;" aria-hidden="true">▶</div>
+          DramaStream
+        </div>
+        <p class="footer-copy">© 2026 DramaStream. All drama content is user-managed via the admin panel.</p>
+      </div>
+    </footer>
+
+  </div>
+  <!-- /#app -->
+
+  <!-- ── Toast Notification ────────────────────────────────────── -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ── Modal Overlay (shared for Confirm + CRUD) ─────────────── -->
+  <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true"></div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       SCRIPTS (load order matters)
+  ═════════════════════════════════════════════════════════════ -->
+  <!-- 1. Data layer -->
+  <script src="js/data.js"></script>
+  <!-- 2. Video embed engine -->
+  <script src="js/embed.js"></script>
+  <!-- 3. Page components -->
+  <script src="js/pages/home.js"></script>
+  <script src="js/pages/watch.js"></script>
+  <script src="js/pages/admin.js"></script>
+  <!-- 4. App router (boot last) -->
+  <script src="js/app.js"></script>
+
+</body>
+</html>
