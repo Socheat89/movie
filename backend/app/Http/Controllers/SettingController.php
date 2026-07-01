@@ -72,9 +72,11 @@ class SettingController extends Controller
         if ($request->hasFile('qr_file')) {
             $file = $request->file('qr_file');
             $filename = 'sponsor_qr_' . time() . '.' . $file->getClientOriginalExtension();
-            
-            // Save to public uploads directory
-            $file->move(public_path('uploads'), $filename);
+            $destPath = public_path('uploads');
+            if (!file_exists($destPath)) {
+                mkdir($destPath, 0755, true);
+            }
+            $file->move($destPath, $filename);
             
             $url = asset('uploads/' . $filename);
             
