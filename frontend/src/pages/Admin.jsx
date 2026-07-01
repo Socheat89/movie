@@ -56,6 +56,7 @@ export default function Admin({ onNavigate }) {
   // Sponsor QR Code Settings
   const [sponsorQrFormUrl, setSponsorQrFormUrl] = useState('');
   const [savingSponsorQr, setSavingSponsorQr] = useState(false);
+  const [uploadingQr, setUploadingQr] = useState(false);
 
   // Notification helper
   const [toast, setToast] = useState({ message: '', type: 'info', show: false });
@@ -378,6 +379,23 @@ export default function Admin({ onNavigate }) {
       showToast('Failed to save QR code: ' + (err.message || 'error'), 'error');
     } finally {
       setSavingSponsorQr(false);
+    }
+  };
+
+  const handleQrFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingQr(true);
+    showToast('Uploading QR image file...', 'info');
+    try {
+      const res = await API.uploadSponsorQr(file);
+      setSponsorQrFormUrl(res.qr_url);
+      showToast('QR Code image uploaded successfully! 📁', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Upload failed: ' + (err.message || 'unknown error'), 'error');
+    } finally {
+      setUploadingQr(false);
     }
   };
 
@@ -727,6 +745,18 @@ export default function Admin({ onNavigate }) {
                     value={sponsorQrFormUrl}
                     onChange={e => setSponsorQrFormUrl(e.target.value)}
                   />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label className="form-label">Or Upload QR Image File</label>
+                  <input
+                    className="form-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleQrFileUpload}
+                    style={{ border: 'none', padding: '6px 0', background: 'transparent' }}
+                  />
+                  {uploadingQr && <small style={{ color: 'var(--accent-lt)', display: 'block', marginTop: '4px' }}>Uploading file...</small>}
                 </div>
                 
                 {sponsorQrFormUrl && (

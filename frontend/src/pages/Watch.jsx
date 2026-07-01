@@ -8,6 +8,7 @@ export default function Watch({ dramaId, onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [sponsorQrUrl, setSponsorQrUrl] = useState('');
+  const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
     async function loadDrama() {
@@ -39,6 +40,15 @@ export default function Watch({ dramaId, onNavigate }) {
       }
     }).catch(err => console.error(err));
   }, []);
+
+  useEffect(() => {
+    if (!dramaId) return;
+    API.getDramas().then(allDramas => {
+      const filtered = allDramas.filter(d => d.id !== dramaId);
+      const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, 5);
+      setRecommendations(shuffled);
+    }).catch(err => console.error(err));
+  }, [dramaId]);
 
   if (loading) {
     return (
@@ -163,89 +173,141 @@ export default function Watch({ dramaId, onNavigate }) {
   };
 
   return (
-    <div className="watch-layout page-enter" style={{ padding: '24px 64px' }}>
-      {/* Video Column */}
-      <div className="video-column">
-        <div className="player-wrapper" id="player-wrapper">
-          {renderPlayer(activeEpisode?.videoUrl)}
-        </div>
-
-        <div className="drama-info">
-          <h1 className="drama-info-title">{drama.title}</h1>
-          <div className="drama-info-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-            <span className="genre-badge">{drama.genre}</span>
-            <span style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>{drama.year || '2025'}</span>
-            <span style={{ color: '#ffb800', fontWeight: 'bold', fontSize: '0.85rem' }}>★ {drama.rating || '8.0'}</span>
-            <span style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>{formatViewsCount(drama.views)}</span>
-            {drama.trending && <span className="trending-badge">🔥 Trending</span>}
-            {activeEpisode && (
-              <span style={{ color: 'var(--text-2)', fontSize: '0.82rem' }}>Now Playing: {activeEpisode.title}</span>
-            )}
+    <div className="watch-layout page-enter" style={{ padding: '24px 64px', display: 'flex', flexDirection: 'column', gap: '48px' }}>
+      
+      {/* Top Media Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '28px', width: '100%', alignItems: 'start' }} className="watch-main-grid">
+        {/* Video Column */}
+        <div className="video-column">
+          <div className="player-wrapper" id="player-wrapper">
+            {renderPlayer(activeEpisode?.videoUrl)}
           </div>
-          <p className="drama-info-desc" style={{ marginTop: '16px', lineHeight: '1.7', color: 'var(--text-2)' }}>
-            {drama.description || 'No description available.'}
-          </p>
 
-          <div style={{ marginTop: '24px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('/')}>
-              ← Back to Home
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Episode Sidebar & Sponsor QR */}
-      <div className="episode-column">
-        <div className="episode-list-box">
-          <div className="episode-list-header">
-            <span>Episodes</span>
-            <span style={{ color: 'var(--text-2)', fontSize: '0.82rem', fontWeight: 400 }}>{episodes.length} total</span>
-          </div>
-          <div className="episode-list-scroll" role="list">
-            {episodes.length === 0 ? (
-              <div style={{ padding: '48px 22px', textAlign: 'center', color: 'var(--text-2)', fontSize: '0.875rem' }}>
-                No episodes available yet.<br />
-                <small style={{ color: 'var(--text-3)' }}>Check back later or add via Admin Panel.</small>
-              </div>
-            ) : (
-              episodes.map((ep, i) => (
-                <div
-                  key={ep.id}
-                  className={`episode-item ${activeEpisode?.id === ep.id ? 'active' : ''}`}
-                  onClick={() => handleEpisodeChange(ep)}
-                  role="listitem"
-                  tabIndex="0"
-                  aria-label={`Play ${ep.title}`}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleEpisodeChange(ep);
-                    }
-                  }}
-                >
-                  <div className="ep-num">{i + 1}</div>
-                  <span className="ep-title">{ep.title}</span>
-                  {activeEpisode?.id === ep.id && <span className="ep-now-playing">▶ Playing</span>}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Sponsor QR Section */}
-        {sponsorQrUrl && (
-          <div className="sponsor-box" style={{ marginTop: '24px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text)' }}>☕ Sponsor Server</h3>
-            <p style={{ color: 'var(--text-2)', fontSize: '0.78rem', lineHeight: '1.5', marginBottom: '16px', maxWidth: '240px' }}>
-              Enjoying the stream? Help us pay for server and hosting costs by scanning the QR code below.
-            </p>
-            <div style={{ background: '#fff', padding: '12px', borderRadius: '12px', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)', marginBottom: '14px', overflow: 'hidden' }}>
-              <img src={getQrImageUrl(sponsorQrUrl)} alt="Sponsor QR Code" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+          <div className="drama-info">
+            <h1 className="drama-info-title">{drama.title}</h1>
+            <div className="drama-info-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+              <span className="genre-badge">{drama.genre}</span>
+              <span style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>{drama.year || '2025'}</span>
+              <span style={{ color: '#ffb800', fontWeight: 'bold', fontSize: '0.85rem' }}>★ {drama.rating || '8.0'}</span>
+              <span style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>{formatViewsCount(drama.views)}</span>
+              {drama.trending && <span className="trending-badge">🔥 Trending</span>}
+              {activeEpisode && (
+                <span style={{ color: 'var(--text-2)', fontSize: '0.82rem' }}>Now Playing: {activeEpisode.title}</span>
+              )}
             </div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--accent-lt)', fontWeight: 600 }}>Thank you for your support! ❤️</span>
+            <p className="drama-info-desc" style={{ marginTop: '16px', lineHeight: '1.7', color: 'var(--text-2)' }}>
+              {drama.description || 'No description available.'}
+            </p>
+
+            <div style={{ marginTop: '24px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('/')}>
+                ← Back to Home
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+
+        {/* Episode Sidebar & Sponsor QR */}
+        <div className="episode-column" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="episode-list-box">
+            <div className="episode-list-header">
+              <span>Episodes</span>
+              <span style={{ color: 'var(--text-2)', fontSize: '0.82rem', fontWeight: 400 }}>{episodes.length} total</span>
+            </div>
+            <div className="episode-list-scroll" role="list">
+              {episodes.length === 0 ? (
+                <div style={{ padding: '48px 22px', textAlign: 'center', color: 'var(--text-2)', fontSize: '0.875rem' }}>
+                  No episodes available yet.<br />
+                  <small style={{ color: 'var(--text-3)' }}>Check back later or add via Admin Panel.</small>
+                </div>
+              ) : (
+                episodes.map((ep, i) => (
+                  <div
+                    key={ep.id}
+                    className={`episode-item ${activeEpisode?.id === ep.id ? 'active' : ''}`}
+                    onClick={() => handleEpisodeChange(ep)}
+                    role="listitem"
+                    tabIndex="0"
+                    aria-label={`Play ${ep.title}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleEpisodeChange(ep);
+                      }
+                    }}
+                  >
+                    <div className="ep-num">{i + 1}</div>
+                    <span className="ep-title">{ep.title}</span>
+                    {activeEpisode?.id === ep.id && <span className="ep-now-playing">▶ Playing</span>}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Sponsor QR Section */}
+          {sponsorQrUrl && (
+            <div className="sponsor-box" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text)' }}>☕ Sponsor Server</h3>
+              <p style={{ color: 'var(--text-2)', fontSize: '0.78rem', lineHeight: '1.5', marginBottom: '16px', maxWidth: '240px' }}>
+                Enjoying the stream? Help us pay for server and hosting costs by scanning the QR code below.
+              </p>
+              <div style={{ background: '#fff', padding: '12px', borderRadius: '12px', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)', marginBottom: '14px', overflow: 'hidden' }}>
+                <img src={getQrImageUrl(sponsorQrUrl)} alt="Sponsor QR Code" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+              </div>
+              <span style={{ fontSize: '0.78rem', color: 'var(--accent-lt)', fontWeight: 600 }}>Thank you for your support! ❤️</span>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Recommended Section */}
+      {recommendations.length > 0 && (
+        <section className="content-section" style={{ borderTop: '1px solid var(--border)', paddingTop: '40px', width: '100%' }}>
+          <div className="section-header" style={{ marginBottom: '24px' }}>
+            <h2 className="section-title" style={{ fontSize: '1.6rem', fontWeight: 800 }}>Recommended <span>Dramas</span></h2>
+          </div>
+          
+          <div className="dramas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '24px' }}>
+            {recommendations.map((d) => (
+              <article
+                key={d.id}
+                className="drama-card"
+                onClick={() => onNavigate(`/watch/${d.id}`)}
+                role="button"
+                tabIndex="0"
+                style={{ cursor: 'pointer', background: 'transparent' }}
+              >
+                <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', aspectRatio: '2/3', marginBottom: '12px', border: '1px solid var(--border)' }}>
+                  <img
+                    className="drama-card-poster loaded"
+                    src={d.poster}
+                    alt={d.title}
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.target.src = `https://picsum.photos/seed/${d.id}/300/450`;
+                    }}
+                  />
+                </div>
+                <div className="drama-card-info" style={{ padding: '0 4px' }}>
+                  <h3 className="drama-card-title" style={{ fontSize: '0.96rem', fontWeight: 600, marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text)' }}>
+                    {d.title}
+                  </h3>
+                  <div className="drama-card-meta" style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', color: 'var(--text-2)' }}>
+                    <span>{d.year || '2025'}</span>
+                    <span>·</span>
+                    <span style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</span>
+                    <span>·</span>
+                    <span style={{ color: 'var(--text-3)' }}>{d.episodeCount || 0} EPs</span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
     </div>
   );
 }

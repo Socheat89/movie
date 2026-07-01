@@ -153,6 +153,21 @@ export const API = {
     });
   },
 
+  async uploadSponsorQr(file) {
+    const formData = new FormData();
+    formData.append('qr_file', file);
+    const url = API_BASE_URL + '/api/settings/sponsor-qr/upload';
+    const res = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Failed to upload QR file.');
+    }
+    return res.json();
+  },
+
   logout() {
     _authed = false;
     localStorage.removeItem('admin_authed');
