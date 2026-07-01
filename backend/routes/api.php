@@ -34,4 +34,5 @@ Route::get('/categories', [SettingController::class, 'getCategories']);
 
 Route::post('/admin/login', [AuthController::class, 'login']);
 Route::post('/admin/change-password', [AuthController::class, 'changePassword']);
+Route::post('/admin/scrape', [DramaController::class, 'scrape']);
 

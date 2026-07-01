@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Drama;
 use App\Models\Episode;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class DramaController extends Controller
@@ -141,6 +142,107 @@ class DramaController extends Controller
         }
         $drama->delete();
         return response()->json(['deleted' => true]);
+    }
+
+    public function scrape(Request $request)
+    {
+        $request->validate([
+            'url' => 'required|url',
+        ]);
+
+        $url = $request->input('url');
+
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            ])->get($url);
+
+            if (!$response->successful()) {
+                return response()->json(['detail' => 'Failed to fetch the webpage. Status code: ' . $response->status()], 400);
+            }
+
+            $html = $response->body();
+
+            // Extract title
+            preg_match('/<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']*)["\']/i', $html, $titleMatch);
+            $title = !empty($titleMatch[1]) ? $titleMatch[1] : '';
+            if (empty($title)) {
+                preg_match('/<h3[^>]*class=["\']fst-italic["\'][^>]*>(.*?)<\/h3>/i', $html, $h3Match);
+                $title = !empty($h3Match[1]) ? strip_tags($h3Match[1]) : 'Scraped Drama';
+            }
+            $title = preg_replace('/\[\d+\.END\]/i', '', $title);
+            $title = preg_replace('/\[\d+\.EP\]/i', '', $title);
+            $title = trim($title);
+
+            // Extract description
+            preg_match('/<meta[^>]*property=["\']og:description["\'][^>]*content=["\']([^"\']*)["\']/i', $html, $descMatch);
+            $description = !empty($descMatch[1]) ? $descMatch[1] : 'No description.';
+
+            // Extract poster
+            preg_match('/<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']*)["\']/i', $html, $posterMatch);
+            $poster = !empty($posterMatch[1]) ? $posterMatch[1] : 'https://picsum.photos/300/450';
+
+            // Extract episodes
+            preg_match('/const\s+videos\s*=\s*(\[[\s\S]*?\]);/', $html, $videosMatch);
+            $episodes = [];
+            if (!empty($videosMatch[1])) {
+                $videoArrayStr = $videosMatch[1];
+                preg_match_all('/\{[\s\S]*?\}/', $videoArrayStr, $objMatches);
+                foreach ($objMatches[0] as $index => $objStr) {
+                    preg_match('/["\']?title["\']?\s*:\s*["\'](.*?)["\']/i', $objStr, $tMatch);
+                    preg_match('/["\']?(?:file|videoUrl)["\']?\s*:\s*["\'](.*?)["\']/i', $objStr, $fMatch);
+                    
+                    $epTitle = !empty($tMatch[1]) ? $tMatch[1] : ("Episode " . ($index + 1));
+                    $epFile = !empty($fMatch[1]) ? $fMatch[1] : "";
+                    
+                    if ($epFile) {
+                        $episodes[] = [
+                            'id' => 'ep_' . time() . '_' . $index,
+                            'episode' => $index + 1,
+                            'title' => $epTitle,
+                            'videoUrl' => $epFile,
+                        ];
+                    }
+                }
+            }
+
+            if (empty($episodes)) {
+                return response()->json(['detail' => 'Could not find any episode videos on this page.'], 400);
+            }
+
+            // Save to database automatically!
+            $dramaId = (string)Str::uuid();
+            $drama = Drama::create([
+                'id' => $dramaId,
+                'title' => $title,
+                'titleKhmer' => '',
+                'description' => $description,
+                'poster' => $poster,
+                'genre' => 'Action',
+                'trending' => true,
+                'status' => '',
+                'totalEpisodes' => count($episodes),
+                'source' => ''
+            ]);
+
+            foreach ($episodes as $ep) {
+                $drama->episodes()->create([
+                    'id' => $ep['id'],
+                    'episode' => $ep['episode'],
+                    'title' => $ep['title'],
+                    'videoUrl' => $ep['videoUrl']
+                ]);
+            }
+
+            return response()->json([
+                'id' => $drama->id,
+                'title' => $drama->title,
+                'episodeCount' => count($episodes)
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json(['detail' => 'Scraper error: ' . $e->getMessage()], 500);
+        }
     }
 
     private function getDramaDetails($id)
