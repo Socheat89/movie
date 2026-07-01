@@ -1,15 +1,24 @@
 const API_BASE_URL = (function () {
   const LOCAL = 'http://localhost:8000';
-  // Fallback production URL — can be configured dynamically
-  const PROD = window.location.origin.includes('github.io') || window.location.origin.includes('fastapicloud')
-    ? 'https://backend-cb159e78.fastapicloud.dev'
-    : window.location.origin;
 
-  return (window.location.hostname === 'localhost' ||
-          window.location.hostname === '127.0.0.1' ||
-          window.location.protocol === 'file:')
-    ? LOCAL
-    : PROD;
+  if (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.protocol === 'file:') {
+    return LOCAL;
+  }
+
+  // Fallback production URL
+  if (window.location.origin.includes('github.io') || window.location.origin.includes('fastapicloud')) {
+    return 'https://backend-cb159e78.fastapicloud.dev';
+  }
+
+  // If hosted on cPanel in subfolders (e.g., /frontend/ and /backend/public/)
+  const href = window.location.href;
+  if (href.includes('/frontend')) {
+    return href.split('/frontend')[0] + '/backend/public';
+  }
+
+  return window.location.origin;
 })();
 
 async function apiFetch(path, options = {}) {
