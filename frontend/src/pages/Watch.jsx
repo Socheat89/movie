@@ -259,40 +259,29 @@ export default function Watch({ dramaId, onNavigate }) {
 
         {/* Episode Sidebar & Sponsor QR */}
         <div className="episode-column" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="episode-list-box">
-            <div className="episode-list-header">
-              <span>Episodes</span>
-              <span style={{ color: 'var(--text-2)', fontSize: '0.82rem', fontWeight: 400 }}>{episodes.length} total</span>
-            </div>
-            <div className="episode-list-scroll" role="list">
+          <div className="episode-list-box" style={{ position: 'relative', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '20px' }}>
+            <label className="form-label" style={{ marginBottom: '10px', fontSize: '0.9rem', fontWeight: 600, display: 'block', color: 'var(--text)' }}>
+              Select Episode ({episodes.length} total)
+            </label>
+            <select
+              className="form-select"
+              value={activeEpisode?.id || ''}
+              onChange={(e) => {
+                const ep = episodes.find(x => x.id === e.target.value);
+                if (ep) handleEpisodeChange(ep);
+              }}
+              style={{ width: '100%', padding: '12px', fontSize: '0.9rem', borderRadius: 'var(--r)', margin: 0, background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--border)', outline: 'none', cursor: 'pointer' }}
+            >
               {episodes.length === 0 ? (
-                <div style={{ padding: '48px 22px', textAlign: 'center', color: 'var(--text-2)', fontSize: '0.875rem' }}>
-                  No episodes available yet.<br />
-                  <small style={{ color: 'var(--text-3)' }}>Check back later or add via Admin Panel.</small>
-                </div>
+                <option value="">No episodes available</option>
               ) : (
                 episodes.map((ep, i) => (
-                  <div
-                    key={ep.id}
-                    className={`episode-item ${activeEpisode?.id === ep.id ? 'active' : ''}`}
-                    onClick={() => handleEpisodeChange(ep)}
-                    role="listitem"
-                    tabIndex="0"
-                    aria-label={`Play ${ep.title}`}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        handleEpisodeChange(ep);
-                      }
-                    }}
-                  >
-                    <div className="ep-num">{i + 1}</div>
-                    <span className="ep-title">{ep.title}</span>
-                    {activeEpisode?.id === ep.id && <span className="ep-now-playing">▶ Playing</span>}
-                  </div>
+                  <option key={ep.id} value={ep.id}>
+                    EP {i + 1} — {ep.title}
+                  </option>
                 ))
               )}
-            </div>
+            </select>
           </div>
 
           {/* Sponsor QR Section */}
