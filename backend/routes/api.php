@@ -34,6 +34,7 @@ Route::get('/categories', [SettingController::class, 'getCategories']);
 Route::post('/categories', [SettingController::class, 'saveCategories']);
 Route::get('/settings/sponsor-qr', [SettingController::class, 'getSponsorQr']);
 Route::post('/settings/sponsor-qr', [SettingController::class, 'saveSponsorQr']);
+Route::post('/settings/sponsor-qr/upload', [SettingController::class, 'uploadSponsorQr']);
 
 Route::post('/admin/login', [AuthController::class, 'login']);
 Route::post('/admin/change-password', [AuthController::class, 'changePassword']);

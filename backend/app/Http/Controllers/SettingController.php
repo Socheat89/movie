@@ -62,4 +62,32 @@ class SettingController extends Controller
             'qr_url' => $request->input('qr_url') ?? ''
         ]);
     }
+
+    public function uploadSponsorQr(Request $request)
+    {
+        $request->validate([
+            'qr_file' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048'
+        ]);
+
+        if ($request->hasFile('qr_file')) {
+            $file = $request->file('qr_file');
+            $filename = 'sponsor_qr_' . time() . '.' . $file->getClientOriginalExtension();
+            
+            // Save to public uploads directory
+            $file->move(public_path('uploads'), $filename);
+            
+            $url = asset('uploads/' . $filename);
+            
+            Setting::updateOrCreate(
+                ['key' => 'sponsor_qr'],
+                ['value' => $url]
+            );
+
+            return response()->json([
+                'qr_url' => $url
+            ]);
+        }
+
+        return response()->json(['detail' => 'No file uploaded.'], 400);
+    }
 }
