@@ -23,6 +23,7 @@ Route::get('/init-app', function () {
     try {
         Artisan::call('key:generate');
         Artisan::call('migrate');
+        Artisan::call('storage:link');
         return "App Initialized & Migrations Run successfully! Key: " . Artisan::output();
     } catch (\Exception $e) {
         return "Error: " . $e->getMessage();
