@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Exclude admin dashboard from indexation
+Disallow: /#/admin
+Disallow: /admin
+
+# Sitemap URL
+Sitemap: https://movie.mekongcyberunit.app/sitemap.xml

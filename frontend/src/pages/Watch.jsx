@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { API } from '../api';
 import { Embed } from '../embed';
+import { updateSeo } from '../seo';
 
 /* ─── local star-rating & comment store ─── */
 const getStoredRating = (id) => {
@@ -105,6 +106,33 @@ export default function Watch({ dramaId, onNavigate }) {
       setRecommendations(filtered.sort(() => .5 - Math.random()).slice(0, 6));
     }).catch(() => {});
   }, [dramaId]);
+
+  useEffect(() => {
+    if (!drama) return;
+    updateSeo({
+      title: `Watch ${drama.title} (${drama.year || '2025'}) Online Free - DramaStream`,
+      description: `Stream ${drama.title} (${drama.year || '2025'}) on DramaStream. ${drama.description ? drama.description.substring(0, 150) : 'Watch full episodes online free.'}...`,
+      keywords: `${drama.title}, watch ${drama.title}, ${drama.genre}, K-drama, Korean drama, stream free`,
+      image: drama.poster,
+      url: window.location.origin + `/#/watch/${drama.id}`,
+      schema: {
+        "@context": "https://schema.org",
+        "@type": "TVSeries",
+        "name": drama.title,
+        "image": drama.poster,
+        "genre": drama.genre,
+        "dateCreated": drama.year,
+        "description": drama.description,
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": drama.rating || "8.0",
+          "bestRating": "10",
+          "worstRating": "1",
+          "ratingCount": "150"
+        }
+      }
+    });
+  }, [drama]);
 
   /* ── helpers ── */
   const formatViews = (count) => {

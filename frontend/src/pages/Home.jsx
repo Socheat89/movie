@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API } from '../api';
+import { updateSeo } from '../seo';
 
 export default function Home({ onNavigate }) {
   const [dramas, setDramas] = useState([]);
@@ -41,6 +42,26 @@ export default function Home({ onNavigate }) {
       }
     }
     loadData();
+  }, []);
+
+  useEffect(() => {
+    updateSeo({
+      title: 'DramaStream — Watch K-Dramas & Asian Series Free',
+      description: 'DramaStream: Watch the latest Korean dramas, trending series, and classic K-dramas for free. No login, no sign-up. One click to stream.',
+      keywords: 'K-drama, Korean drama, Asian drama, watch free, streaming, DramaStream, mekongcyberunit',
+      url: window.location.origin + '/#/',
+      schema: {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "DramaStream",
+        "url": window.location.origin + '/#/',
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": window.location.origin + "/#/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    });
   }, []);
 
   const trending = dramas.filter(d => d.trending);
