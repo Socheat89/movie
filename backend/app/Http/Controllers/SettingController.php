@@ -73,12 +73,22 @@ class SettingController extends Controller
             $file = $request->file('qr_file');
             $filename = 'sponsor_qr_' . time() . '.' . $file->getClientOriginalExtension();
             $destPath = public_path('uploads');
-            if (!file_exists($destPath)) {
-                mkdir($destPath, 0755, true);
-            }
-            $file->move($destPath, $filename);
             
-            $url = asset('uploads/' . $filename);
+            try {
+                if (!file_exists($destPath)) {
+                    @mkdir($destPath, 0755, true);
+                }
+                $file->move($destPath, $filename);
+                $url = asset('uploads/' . $filename);
+            } catch (\Exception $e) {
+                // Fallback: save to storage/app/public/uploads which is guaranteed writable
+                try {
+                    $file->storeAs('public/uploads', $filename);
+                    $url = asset('storage/uploads/' . $filename);
+                } catch (\Exception $ex) {
+                    return response()->json(['detail' => 'Upload failed. Permissions error: ' . $ex->getMessage()], 500);
+                }
+            }
             
             Setting::updateOrCreate(
                 ['key' => 'sponsor_qr'],
