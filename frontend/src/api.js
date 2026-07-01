@@ -12,13 +12,8 @@ const API_BASE_URL = (function () {
     return 'https://backend-cb159e78.fastapicloud.dev';
   }
 
-  // If hosted on cPanel in subfolders (e.g., /frontend/ and /backend/public/)
-  const href = window.location.href;
-  if (href.includes('/frontend')) {
-    return href.split('/frontend')[0] + '/backend/public';
-  }
-
-  return window.location.origin;
+  // Under cPanel, backend is always located at /backend/public relative to the host root
+  return window.location.origin + '/backend/public';
 })();
 
 async function apiFetch(path, options = {}) {
