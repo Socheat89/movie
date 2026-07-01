@@ -231,7 +231,7 @@ export default function Home({ onNavigate }) {
                       height: '36px',
                       display: 'flex',
                       alignItems: 'center',
-                      justify-content: 'center',
+                      justifyContent: 'center',
                       color: '#ff4b4b',
                       fontSize: '1rem',
                       cursor: 'pointer',
