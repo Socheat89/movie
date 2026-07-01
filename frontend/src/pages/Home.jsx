@@ -363,7 +363,7 @@ export default function Home({ onNavigate }) {
                       height: '36px',
                       display: 'flex',
                       alignItems: 'center',
-                      justify-content: 'center',
+                      justifyContent: 'center',
                       color: favorites.includes(d.id) ? '#ff4b4b' : 'var(--text-2)',
                       fontSize: '1rem',
                       cursor: 'pointer',
