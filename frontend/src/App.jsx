@@ -59,12 +59,6 @@ function App() {
             >
               Home
             </a>
-            <a
-              href="#/admin"
-              className={`nav-link ${isAdminActive ? 'active' : ''}`}
-            >
-              Admin Dashboard
-            </a>
           </div>
 
           {/* Mobile hamburger */}
