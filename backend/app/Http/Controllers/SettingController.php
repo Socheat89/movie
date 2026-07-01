@@ -38,4 +38,28 @@ class SettingController extends Controller
 
         return response()->json($categories);
     }
+
+    public function getSponsorQr()
+    {
+        $setting = Setting::find('sponsor_qr');
+        return response()->json([
+            'qr_url' => $setting ? $setting->value : ''
+        ]);
+    }
+
+    public function saveSponsorQr(Request $request)
+    {
+        $request->validate([
+            'qr_url' => 'nullable|string'
+        ]);
+
+        Setting::updateOrCreate(
+            ['key' => 'sponsor_qr'],
+            ['value' => $request->input('qr_url') ?? '']
+        );
+
+        return response()->json([
+            'qr_url' => $request->input('qr_url') ?? ''
+        ]);
+    }
 }

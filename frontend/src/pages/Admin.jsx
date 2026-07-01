@@ -26,6 +26,8 @@ export default function Admin({ onNavigate }) {
     poster: '',
     genre: 'Action',
     trending: false,
+    year: '2025',
+    rating: '8.5',
   });
 
   // Episode Modal State
@@ -51,6 +53,10 @@ export default function Admin({ onNavigate }) {
   });
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
+  // Sponsor QR Code Settings
+  const [sponsorQrFormUrl, setSponsorQrFormUrl] = useState('');
+  const [savingSponsorQr, setSavingSponsorQr] = useState(false);
+
   // Notification helper
   const [toast, setToast] = useState({ message: '', type: 'info', show: false });
 
@@ -64,12 +70,16 @@ export default function Admin({ onNavigate }) {
   const loadDashboardData = async () => {
     setLoadingDashboard(true);
     try {
-      const [dramasRes, categoriesRes] = await Promise.all([
+      const [dramasRes, categoriesRes, qrRes] = await Promise.all([
         API.getDramas(),
-        API.getCategories()
+        API.getCategories(),
+        API.getSponsorQr()
       ]);
       setDramas(dramasRes);
       setCategories(categoriesRes);
+      if (qrRes && qrRes.qr_url) {
+        setSponsorQrFormUrl(qrRes.qr_url);
+      }
       if (dramasRes.length > 0 && !activeDramaId) {
         setActiveDramaId(dramasRes[0].id);
       }
@@ -168,6 +178,8 @@ export default function Admin({ onNavigate }) {
         poster: drama.poster || '',
         genre: drama.genre || 'Action',
         trending: !!drama.trending,
+        year: drama.year || '2025',
+        rating: drama.rating || '8.5',
       });
     } else {
       setDramaForm({
@@ -176,6 +188,8 @@ export default function Admin({ onNavigate }) {
         poster: '',
         genre: 'Action',
         trending: false,
+        year: '2025',
+        rating: '8.5',
       });
     }
     setDramaModalOpen(true);
@@ -353,6 +367,20 @@ export default function Admin({ onNavigate }) {
     }
   };
 
+  // ── Sponsor QR Code Actions ──────────────────────────────────
+  const handleSaveSponsorQr = async (e) => {
+    e.preventDefault();
+    setSavingSponsorQr(true);
+    try {
+      await API.saveSponsorQr(sponsorQrFormUrl);
+      showToast('Sponsor QR code saved successfully! 💳', 'success');
+    } catch (err) {
+      showToast('Failed to save QR code: ' + (err.message || 'error'), 'error');
+    } finally {
+      setSavingSponsorQr(false);
+    }
+  };
+
   // Filter dramas by search
   const filteredDramas = dramas.filter(d =>
     d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -393,6 +421,7 @@ export default function Admin({ onNavigate }) {
   }
 
   const totalEpisodesCount = dramas.reduce((acc, curr) => acc + (curr.episodeCount || 0), 0);
+  const totalViewsCount = dramas.reduce((acc, curr) => acc + (curr.views || 0), 0);
   const trendingCount = dramas.filter(d => d.trending).length;
 
   return (
@@ -404,14 +433,14 @@ export default function Admin({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
           <div>
             <h1 className="admin-title" style={{ fontSize: '2.2rem', fontWeight: 800 }}>Admin Dashboard</h1>
-            <p className="admin-subtitle">Manage DramaStream content — dramas, episodes, categories &amp; admin profile</p>
+            <p className="admin-subtitle">Manage DramaStream content — dramas, episodes, categories, and payment settings</p>
           </div>
           <button className="btn btn-ghost btn-sm" onClick={handleLogout} style={{ borderRadius: 'var(--r-sm)' }}>← Logout</button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="admin-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+      <div className="admin-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
           <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{dramas.length}</div>
           <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Dramas</div>
@@ -421,8 +450,8 @@ export default function Admin({ onNavigate }) {
           <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Episodes</div>
         </div>
         <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
-          <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{trendingCount}</div>
-          <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Trending</div>
+          <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{totalViewsCount >= 1000 ? (totalViewsCount / 1000).toFixed(1) + 'K' : totalViewsCount}</div>
+          <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Views</div>
         </div>
         <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
           <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{categories.length}</div>
@@ -441,8 +470,8 @@ export default function Admin({ onNavigate }) {
         <button className={`admin-tab ${activeTab === 'categories' ? 'active' : ''}`} onClick={() => setActiveTab('categories')}>
           🏷️ Categories
         </button>
-        <button className={`admin-tab ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
-          👤 Profile
+        <button className={`admin-tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+          ⚙️ Settings &amp; Profile
         </button>
       </div>
 
@@ -488,15 +517,16 @@ export default function Admin({ onNavigate }) {
                   <th>Poster</th>
                   <th>Title</th>
                   <th>Genre</th>
-                  <th>Episodes</th>
-                  <th>Status</th>
+                  <th>Year</th>
+                  <th>Rating</th>
+                  <th>Views</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredDramas.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: 'center', padding: '52px', color: 'var(--text-2)' }}>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '52px', color: 'var(--text-2)' }}>
                       No dramas yet. Click <strong>+ Add Drama</strong> or use the Link Scraper tool above.
                     </td>
                   </tr>
@@ -508,8 +538,9 @@ export default function Admin({ onNavigate }) {
                       </td>
                       <td style={{ fontWeight: 600, maxWidth: '220px', wordBreak: 'break-word' }}>{d.title}</td>
                       <td><span className="genre-badge">{d.genre}</span></td>
-                      <td style={{ color: 'var(--text-2)' }}>{d.episodeCount || 0}</td>
-                      <td>{d.trending ? <span className="trending-badge">🔥 Trending</span> : <span style={{ color: 'var(--text-3)', fontSize: '0.78rem' }}>—</span>}</td>
+                      <td style={{ color: 'var(--text-2)' }}>{d.year || '2025'}</td>
+                      <td style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</td>
+                      <td style={{ color: 'var(--text-3)' }}>{d.views || 0}</td>
                       <td>
                         <div className="table-actions">
                           <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openDramaModal(d)} title="Edit">✏️</button>
@@ -666,39 +697,47 @@ export default function Admin({ onNavigate }) {
         </div>
       )}
 
-      {activeTab === 'profile' && (
+      {activeTab === 'settings' && (
         <div id="admin-tab-body" className="page-enter">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', maxWidth: '950px' }}>
             
-            {/* Admin Profile Overview */}
-            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-              <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: 'var(--accent)', fontSize: '2.5rem', display: 'flex', alignItems: 'center', justifyItems: 'center', color: '#fff', fontWeight: 'bold', justifyContent: 'center', boxShadow: '0 8px 30px var(--accent-glow)', marginBottom: '20px' }}>
-                A
-              </div>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '4px' }}>Administrator</h2>
-              <span style={{ color: 'var(--accent-lt)', fontSize: '0.85rem', fontWeight: 600, background: 'var(--accent-glow)', padding: '4px 14px', borderRadius: '100px', marginBottom: '24px' }}>
-                Super Admin
-              </span>
-              
-              <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: '20px', textAlign: 'left' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-2)' }}>Username:</span>
-                  <strong style={{ color: 'var(--text)' }}>admin</strong>
+            {/* Sponsor QR Settings */}
+            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
+              <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '4px' }}>☕ Sponsor QR Code</h2>
+              <p style={{ color: 'var(--text-2)', fontSize: '0.82rem', marginBottom: '20px' }}>
+                Paste the URL of your payment QR code (e.g. ABA Pay, ACLEDA, or any public image URL) to show on the watch page.
+              </p>
+
+              <form onSubmit={handleSaveSponsorQr} novalidate>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label">Sponsor QR Code Image URL</label>
+                  <input
+                    className="form-input"
+                    type="url"
+                    placeholder="e.g. https://domain.com/aba_qr.jpg"
+                    value={sponsorQrFormUrl}
+                    onChange={e => setSponsorQrFormUrl(e.target.value)}
+                  />
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-2)' }}>Role permissions:</span>
-                  <strong style={{ color: 'var(--green)' }}>Full Access</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-2)' }}>Database backend:</span>
-                  <strong style={{ color: 'var(--text)' }}>cPanel MySQL</strong>
-                </div>
-              </div>
+                
+                {sponsorQrFormUrl && (
+                  <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <small style={{ color: 'var(--text-3)', marginBottom: '8px' }}>QR Preview:</small>
+                    <div style={{ background: '#fff', padding: '8px', borderRadius: '8px', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                      <img src={sponsorQrFormUrl} alt="QR Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    </div>
+                  </div>
+                )}
+
+                <button type="submit" className="btn btn-primary" disabled={savingSponsorQr} style={{ width: '100%', justifyContent: 'center' }}>
+                  {savingSponsorQr ? 'Saving…' : '💾 Save QR Code'}
+                </button>
+              </form>
             </div>
 
             {/* Change Password Form */}
             <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
-              <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '4px' }}>Update Admin Password</h2>
+              <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '4px' }}>🔑 Update Password</h2>
               <p style={{ color: 'var(--text-2)', fontSize: '0.82rem', marginBottom: '20px' }}>
                 Change your dashboard entry password. Make sure to choose a secure password.
               </p>
@@ -738,7 +777,7 @@ export default function Admin({ onNavigate }) {
                   />
                 </div>
                 <button type="submit" className="btn btn-primary" disabled={updatingPassword} style={{ width: '100%', justifyContent: 'center' }}>
-                  {updatingPassword ? 'Updating Password…' : '🔑 Change Password'}
+                  {updatingPassword ? 'Updating Password…' : 'Change Password'}
                 </button>
               </form>
             </div>
@@ -795,7 +834,8 @@ export default function Admin({ onNavigate }) {
                   Leave blank to use a random placeholder.
                 </small>
               </div>
-              <div className="form-grid-2">
+              
+              <div className="form-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
                 <div className="form-group">
                   <label className="form-label" htmlFor="f-genre">Genre</label>
                   <select
@@ -809,18 +849,44 @@ export default function Admin({ onNavigate }) {
                     ))}
                   </select>
                 </div>
-                <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '20px' }}>
-                  <label className="form-check">
-                    <input
-                      type="checkbox"
-                      id="f-trending"
-                      checked={dramaForm.trending}
-                      onChange={e => setDramaForm(prev => ({ ...prev, trending: e.target.checked }))}
-                    />
-                    <span>Mark as Trending</span>
-                  </label>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="f-year">Release Year</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    id="f-year"
+                    value={dramaForm.year}
+                    onChange={e => setDramaForm(prev => ({ ...prev, year: e.target.value }))}
+                    placeholder="e.g. 2025"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="f-rating">Rating (Stars)</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    id="f-rating"
+                    value={dramaForm.rating}
+                    onChange={e => setDramaForm(prev => ({ ...prev, rating: e.target.value }))}
+                    placeholder="e.g. 8.5"
+                  />
                 </div>
               </div>
+
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', marginTop: '10px', marginBottom: '20px' }}>
+                <label className="form-check" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    id="f-trending"
+                    checked={dramaForm.trending}
+                    onChange={e => setDramaForm(prev => ({ ...prev, trending: e.target.checked }))}
+                  />
+                  <span>Mark as Trending</span>
+                </label>
+              </div>
+
               <div className="form-actions">
                 <button type="button" className="btn btn-ghost" onClick={() => setDramaModalOpen(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary">

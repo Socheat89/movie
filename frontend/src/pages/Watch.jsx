@@ -7,6 +7,7 @@ export default function Watch({ dramaId, onNavigate }) {
   const [activeEpisode, setActiveEpisode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [sponsorQrUrl, setSponsorQrUrl] = useState('');
 
   useEffect(() => {
     async function loadDrama() {
@@ -30,6 +31,14 @@ export default function Watch({ dramaId, onNavigate }) {
     }
     loadDrama();
   }, [dramaId]);
+
+  useEffect(() => {
+    API.getSponsorQr().then(res => {
+      if (res && res.qr_url) {
+        setSponsorQrUrl(res.qr_url);
+      }
+    }).catch(err => console.error(err));
+  }, []);
 
   if (loading) {
     return (
@@ -137,6 +146,13 @@ export default function Watch({ dramaId, onNavigate }) {
     );
   };
 
+  const formatViewsCount = (count) => {
+    if (!count) return '0 views';
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M views';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K views';
+    return count + ' views';
+  };
+
   return (
     <div className="watch-layout page-enter" style={{ padding: '24px 64px' }}>
       {/* Video Column */}
@@ -147,25 +163,29 @@ export default function Watch({ dramaId, onNavigate }) {
 
         <div className="drama-info">
           <h1 className="drama-info-title">{drama.title}</h1>
-          <div className="drama-info-meta">
+          <div className="drama-info-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
             <span className="genre-badge">{drama.genre}</span>
-            <span style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>{episodes.length} Episodes</span>
+            <span style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>{drama.year || '2025'}</span>
+            <span style={{ color: '#ffb800', fontWeight: 'bold', fontSize: '0.85rem' }}>★ {drama.rating || '8.0'}</span>
+            <span style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>{formatViewsCount(drama.views)}</span>
             {drama.trending && <span className="trending-badge">🔥 Trending</span>}
             {activeEpisode && (
-              <span style={{ color: 'var(--text-2)', fontSize: '0.82rem' }}>Now: {activeEpisode.title}</span>
+              <span style={{ color: 'var(--text-2)', fontSize: '0.82rem' }}>Now Playing: {activeEpisode.title}</span>
             )}
           </div>
-          <p className="drama-info-desc">{drama.description || 'No description available.'}</p>
+          <p className="drama-info-desc" style={{ marginTop: '16px', lineHeight: '1.7', color: 'var(--text-2)' }}>
+            {drama.description || 'No description available.'}
+          </p>
 
           <div style={{ marginTop: '24px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('/')}>
-              ← All Dramas
+              ← Back to Home
             </button>
           </div>
         </div>
       </div>
 
-      {/* Episode Sidebar */}
+      {/* Episode Sidebar & Sponsor QR */}
       <div className="episode-column">
         <div className="episode-list-box">
           <div className="episode-list-header">
@@ -202,6 +222,20 @@ export default function Watch({ dramaId, onNavigate }) {
             )}
           </div>
         </div>
+
+        {/* Sponsor QR Section */}
+        {sponsorQrUrl && (
+          <div className="sponsor-box" style={{ marginTop: '24px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text)' }}>☕ Sponsor Server</h3>
+            <p style={{ color: 'var(--text-2)', fontSize: '0.78rem', lineHeight: '1.5', marginBottom: '16px', maxWidth: '240px' }}>
+              Enjoying the stream? Help us pay for server and hosting costs by scanning the QR code below.
+            </p>
+            <div style={{ background: '#fff', padding: '12px', borderRadius: '12px', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)', marginBottom: '14px', overflow: 'hidden' }}>
+              <img src={sponsorQrUrl} alt="Sponsor QR Code" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+            </div>
+            <span style={{ fontSize: '0.78rem', color: 'var(--accent-lt)', fontWeight: 600 }}>Thank you for your support! ❤️</span>
+          </div>
+        )}
       </div>
     </div>
   );

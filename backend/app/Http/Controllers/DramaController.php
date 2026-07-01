@@ -24,6 +24,9 @@ class DramaController extends Controller
                 'status' => $drama->status,
                 'totalEpisodes' => (int)$drama->totalEpisodes,
                 'source' => $drama->source,
+                'year' => $drama->year ?? '2025',
+                'rating' => $drama->rating ?? '8.0',
+                'views' => (int)$drama->views,
                 'episodeCount' => $drama->episodes_count,
                 'createdAt' => strtotime($drama->created_at),
             ];
@@ -34,33 +37,14 @@ class DramaController extends Controller
 
     public function show($id)
     {
-        $drama = Drama::with('episodes')->find($id);
+        $drama = Drama::find($id);
         if (!$drama) {
             return response()->json(['detail' => 'Drama not found'], 404);
         }
-        return response()->json([
-            'id' => $drama->id,
-            'title' => $drama->title,
-            'titleKhmer' => $drama->titleKhmer,
-            'description' => $drama->description,
-            'poster' => $drama->poster,
-            'genre' => $drama->genre,
-            'trending' => (bool)$drama->trending,
-            'status' => $drama->status,
-            'totalEpisodes' => (int)$drama->totalEpisodes,
-            'source' => $drama->source,
-            'createdAt' => strtotime($drama->created_at),
-            'episodes' => $drama->episodes->map(function($ep) {
-                return [
-                    'id' => $ep->id,
-                    'drama_id' => $ep->drama_id,
-                    'episode' => $ep->episode,
-                    'title' => $ep->title,
-                    'videoUrl' => $ep->videoUrl,
-                    'createdAt' => strtotime($ep->created_at),
-                ];
-            })
-        ]);
+        // Increment views on watch details load
+        $drama->increment('views');
+        
+        return response()->json($this->getDramaDetails($id));
     }
 
     public function store(Request $request)
@@ -75,6 +59,8 @@ class DramaController extends Controller
             'status' => 'nullable|string',
             'totalEpisodes' => 'nullable|integer',
             'source' => 'nullable|string',
+            'year' => 'nullable|string',
+            'rating' => 'nullable|string',
             'episodes' => 'nullable|array'
         ]);
 
@@ -91,7 +77,10 @@ class DramaController extends Controller
             'trending' => $trending,
             'status' => $data['status'] ?? '',
             'totalEpisodes' => $data['totalEpisodes'] ?? 0,
-            'source' => $data['source'] ?? ''
+            'source' => $data['source'] ?? '',
+            'year' => $data['year'] ?? '2025',
+            'rating' => $data['rating'] ?? '8.0',
+            'views' => 0
         ]);
 
         if (isset($data['episodes']) && is_array($data['episodes'])) {
@@ -127,6 +116,9 @@ class DramaController extends Controller
             'status' => 'sometimes|nullable|string',
             'totalEpisodes' => 'sometimes|integer',
             'source' => 'sometimes|nullable|string',
+            'year' => 'sometimes|nullable|string',
+            'rating' => 'sometimes|nullable|string',
+            'views' => 'sometimes|integer',
         ]);
 
         $drama->update($data);
@@ -222,7 +214,10 @@ class DramaController extends Controller
                 'trending' => true,
                 'status' => '',
                 'totalEpisodes' => count($episodes),
-                'source' => ''
+                'source' => '',
+                'year' => '2025',
+                'rating' => '8.5',
+                'views' => 0
             ]);
 
             foreach ($episodes as $ep) {
@@ -260,6 +255,9 @@ class DramaController extends Controller
             'status' => $drama->status,
             'totalEpisodes' => (int)$drama->totalEpisodes,
             'source' => $drama->source,
+            'year' => $drama->year ?? '2025',
+            'rating' => $drama->rating ?? '8.0',
+            'views' => (int)$drama->views,
             'createdAt' => strtotime($drama->created_at),
             'episodes' => $drama->episodes->map(function($ep) {
                 return [

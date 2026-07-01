@@ -22,12 +22,16 @@ class Drama extends Model
         'trending',
         'status',
         'totalEpisodes',
-        'source'
+        'source',
+        'year',
+        'rating',
+        'views'
     ];
 
     protected $casts = [
         'trending' => 'boolean',
-        'totalEpisodes' => 'integer'
+        'totalEpisodes' => 'integer',
+        'views' => 'integer'
     ];
 
     public function episodes()

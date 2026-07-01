@@ -142,6 +142,17 @@ export const API = {
     });
   },
 
+  async getSponsorQr() {
+    return apiFetch('/api/settings/sponsor-qr');
+  },
+
+  async saveSponsorQr(qr_url) {
+    return apiFetch('/api/settings/sponsor-qr', {
+      method: 'POST',
+      body: JSON.stringify({ qr_url })
+    });
+  },
+
   logout() {
     _authed = false;
     localStorage.removeItem('admin_authed');

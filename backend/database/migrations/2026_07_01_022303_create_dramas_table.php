@@ -22,6 +22,9 @@ return new class extends Migration
             $table->string('status', 50)->nullable();
             $table->integer('totalEpisodes')->default(0);
             $table->string('source', 255)->nullable();
+            $table->string('year', 10)->nullable()->default('2025');
+            $table->string('rating', 10)->nullable()->default('8.0');
+            $table->integer('views')->default(0);
             $table->timestamps();
         });
     }
