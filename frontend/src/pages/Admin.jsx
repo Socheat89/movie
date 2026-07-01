@@ -39,6 +39,18 @@ export default function Admin({ onNavigate }) {
   // Search Drama
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Categories management state
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [savingCategories, setSavingCategories] = useState(false);
+
+  // Profile management state (change password)
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+
   // Notification helper
   const [toast, setToast] = useState({ message: '', type: 'info', show: false });
 
@@ -101,6 +113,7 @@ export default function Admin({ onNavigate }) {
     showToast('Logged out.', 'info');
   };
 
+  // ── Scrape / Import logic ──────────────────────────────────────
   const handleScrape = async () => {
     if (!importUrl.trim()) {
       showToast('Please paste a valid website URL first.', 'error');
@@ -282,6 +295,64 @@ export default function Admin({ onNavigate }) {
     }
   };
 
+  // ── Categories CRUD Actions ───────────────────────────────────
+  const handleAddCategory = () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    if (categories.includes(name)) {
+      showToast('Category already exists!', 'error');
+      return;
+    }
+    setCategories([...categories, name]);
+    setNewCategoryName('');
+  };
+
+  const handleDeleteCategory = (catName) => {
+    const ok = window.confirm(`Delete category "${catName}"? (Dramas of this genre will remain intact but the filter will be removed)`);
+    if (ok) {
+      setCategories(categories.filter(c => c !== catName));
+    }
+  };
+
+  const handleSaveCategories = async () => {
+    setSavingCategories(true);
+    try {
+      await API.saveCategories(categories);
+      showToast('Categories list saved successfully! 🏷️', 'success');
+    } catch (err) {
+      showToast('Failed to save categories: ' + (err.message || 'error'), 'error');
+    } finally {
+      setSavingCategories(false);
+    }
+  };
+
+  // ── Profile / Password Update Actions ────────────────────────
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    const { oldPassword, newPassword, confirmPassword } = passwordForm;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      showToast('All fields are required.', 'error');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showToast('New password and confirm password do not match.', 'error');
+      return;
+    }
+
+    setUpdatingPassword(true);
+    try {
+      await API.changePassword(oldPassword, newPassword);
+      showToast('Password updated successfully! 🔑', 'success');
+      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      showToast('Failed to update password: ' + (err.message || 'unknown error'), 'error');
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
   // Filter dramas by search
   const filteredDramas = dramas.filter(d =>
     d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -329,54 +400,60 @@ export default function Admin({ onNavigate }) {
       {toast.show && <div className={`toast ${toast.type} show`}>{toast.message}</div>}
 
       {/* Header */}
-      <div className="admin-header">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'between', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
-          <div style={{ flex: 1 }}>
-            <h1 className="admin-title">Admin Dashboard</h1>
-            <p className="admin-subtitle">Manage DramaStream content — dramas, episodes &amp; categories</p>
+      <div className="admin-header" style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
+          <div>
+            <h1 className="admin-title" style={{ fontSize: '2.2rem', fontWeight: 800 }}>Admin Dashboard</h1>
+            <p className="admin-subtitle">Manage DramaStream content — dramas, episodes, categories &amp; admin profile</p>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={handleLogout}>← Logout</button>
+          <button className="btn btn-ghost btn-sm" onClick={handleLogout} style={{ borderRadius: 'var(--r-sm)' }}>← Logout</button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="admin-stats">
-        <div className="stat-card">
-          <div className="stat-value">{dramas.length}</div>
-          <div className="stat-label">Total Dramas</div>
+      <div className="admin-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
+          <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{dramas.length}</div>
+          <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Dramas</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-value">{totalEpisodesCount}</div>
-          <div className="stat-label">Total Episodes</div>
+        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
+          <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{totalEpisodesCount}</div>
+          <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Episodes</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-value">{trendingCount}</div>
-          <div className="stat-label">Trending</div>
+        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
+          <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{trendingCount}</div>
+          <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Trending</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-value">{categories.length}</div>
-          <div className="stat-label">Categories</div>
+        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
+          <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{categories.length}</div>
+          <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Categories</div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="admin-tabs" role="tablist">
+      <div className="admin-tabs" role="tablist" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '1px', marginBottom: '28px' }}>
         <button className={`admin-tab ${activeTab === 'dramas' ? 'active' : ''}`} onClick={() => setActiveTab('dramas')}>
           🎬 Dramas
         </button>
         <button className={`admin-tab ${activeTab === 'episodes' ? 'active' : ''}`} onClick={() => setActiveTab('episodes')}>
           ▶ Episodes
         </button>
+        <button className={`admin-tab ${activeTab === 'categories' ? 'active' : ''}`} onClick={() => setActiveTab('categories')}>
+          🏷️ Categories
+        </button>
+        <button className={`admin-tab ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
+          👤 Profile
+        </button>
       </div>
 
       {/* Tab Body */}
-      {activeTab === 'dramas' ? (
-        <div id="admin-tab-body">
-          <div className="admin-toolbar" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
+      {activeTab === 'dramas' && (
+        <div id="admin-tab-body" className="page-enter">
+          <div className="admin-toolbar" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', width: '100%', marginBottom: '20px' }}>
             <input
               className="search-input"
               type="search"
-              placeholder="🔍 Search dramas…"
+              placeholder="🔍 Search dramas by title or genre…"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{ flex: 1, minWidth: '200px' }}
@@ -387,7 +464,7 @@ export default function Admin({ onNavigate }) {
               <input
                 className="form-input"
                 type="url"
-                placeholder="Paste KhmerKomsan URL..."
+                placeholder="Paste KhmerKomsan movie URL..."
                 value={importUrl}
                 onChange={e => setImportUrl(e.target.value)}
                 style={{ margin: 0, flex: 1 }}
@@ -404,7 +481,7 @@ export default function Admin({ onNavigate }) {
             <button className="btn btn-primary" onClick={() => openDramaModal(null)}>+ Add Drama</button>
           </div>
 
-          <div className="admin-table-wrapper">
+          <div className="admin-table-wrapper" style={{ background: 'var(--bg-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
             <table className="admin-table">
               <thead>
                 <tr>
@@ -420,7 +497,7 @@ export default function Admin({ onNavigate }) {
                 {filteredDramas.length === 0 ? (
                   <tr>
                     <td colSpan="6" style={{ textAlign: 'center', padding: '52px', color: 'var(--text-2)' }}>
-                      No dramas yet. Click <strong>+ Add Drama</strong> to create one.
+                      No dramas yet. Click <strong>+ Add Drama</strong> or use the Link Scraper tool above.
                     </td>
                   </tr>
                 ) : (
@@ -447,8 +524,10 @@ export default function Admin({ onNavigate }) {
             </table>
           </div>
         </div>
-      ) : (
-        <div id="admin-tab-body">
+      )}
+
+      {activeTab === 'episodes' && (
+        <div id="admin-tab-body" className="page-enter">
           {dramas.length === 0 ? (
             <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-2)' }}>
               No dramas found.{' '}
@@ -458,7 +537,7 @@ export default function Admin({ onNavigate }) {
             </div>
           ) : (
             <>
-              <div className="admin-toolbar">
+              <div className="admin-toolbar" style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
                 <select
                   className="search-input"
                   value={activeDramaId || ''}
@@ -475,7 +554,7 @@ export default function Admin({ onNavigate }) {
               {loadingEpisodes ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-2)' }}>Loading episodes…</div>
               ) : (
-                <div className="admin-table-wrapper">
+                <div className="admin-table-wrapper" style={{ background: 'var(--bg-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
                   <table className="admin-table">
                     <thead>
                       <tr>
@@ -523,6 +602,148 @@ export default function Admin({ onNavigate }) {
               )}
             </>
           )}
+        </div>
+      )}
+
+      {activeTab === 'categories' && (
+        <div id="admin-tab-body" className="page-enter">
+          <div style={{ maxWidth: '750px', background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Manage Movie Categories</h2>
+            <p style={{ color: 'var(--text-2)', fontSize: '0.85rem', marginBottom: '24px' }}>
+              Add, remove, and sort categories. Make sure to click <strong>Save Categories</strong> to apply changes to the website filters.
+            </p>
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="Enter new category name (e.g. Action, Horror)"
+                value={newCategoryName}
+                onChange={e => setNewCategoryName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleAddCategory(); }}
+                style={{ margin: 0 }}
+              />
+              <button className="btn btn-primary" onClick={handleAddCategory}>Add</button>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', minHeight: '80px', padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border)', borderRadius: 'var(--r)', marginBottom: '32px' }}>
+              {categories.length === 0 ? (
+                <div style={{ color: 'var(--text-3)', fontSize: '0.9rem', width: '100%', textAlign: 'center', alignSelf: 'center' }}>No categories added.</div>
+              ) : (
+                categories.map(cat => (
+                  <span
+                    key={cat}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: 'var(--bg-3)',
+                      color: 'var(--text)',
+                      padding: '6px 14px',
+                      borderRadius: '100px',
+                      fontSize: '0.88rem',
+                      fontWeight: 500,
+                      border: '1px solid var(--border)'
+                    }}
+                  >
+                    {cat}
+                    <button
+                      onClick={() => handleDeleteCategory(cat)}
+                      style={{ color: 'var(--red)', fontSize: '1rem', fontWeight: 'bold', padding: '0 2px' }}
+                      title="Remove"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
+
+            <button className="btn btn-primary" onClick={handleSaveCategories} disabled={savingCategories} style={{ gap: '8px' }}>
+              {savingCategories ? 'Saving…' : '💾 Save Categories'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'profile' && (
+        <div id="admin-tab-body" className="page-enter">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', maxWidth: '950px' }}>
+            
+            {/* Admin Profile Overview */}
+            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: 'var(--accent)', fontSize: '2.5rem', display: 'flex', alignItems: 'center', justifyItems: 'center', color: '#fff', fontWeight: 'bold', justifyContent: 'center', boxShadow: '0 8px 30px var(--accent-glow)', marginBottom: '20px' }}>
+                A
+              </div>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '4px' }}>Administrator</h2>
+              <span style={{ color: 'var(--accent-lt)', fontSize: '0.85rem', fontWeight: 600, background: 'var(--accent-glow)', padding: '4px 14px', borderRadius: '100px', marginBottom: '24px' }}>
+                Super Admin
+              </span>
+              
+              <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: '20px', textAlign: 'left' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+                  <span style={{ color: 'var(--text-2)' }}>Username:</span>
+                  <strong style={{ color: 'var(--text)' }}>admin</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+                  <span style={{ color: 'var(--text-2)' }}>Role permissions:</span>
+                  <strong style={{ color: 'var(--green)' }}>Full Access</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                  <span style={{ color: 'var(--text-2)' }}>Database backend:</span>
+                  <strong style={{ color: 'var(--text)' }}>cPanel MySQL</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Change Password Form */}
+            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
+              <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '4px' }}>Update Admin Password</h2>
+              <p style={{ color: 'var(--text-2)', fontSize: '0.82rem', marginBottom: '20px' }}>
+                Change your dashboard entry password. Make sure to choose a secure password.
+              </p>
+
+              <form onSubmit={handleUpdatePassword} novalidate>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label">Current Password</label>
+                  <input
+                    className="form-input"
+                    type="password"
+                    placeholder="Enter current password"
+                    value={passwordForm.oldPassword}
+                    onChange={e => setPasswordForm(prev => ({ ...prev, oldPassword: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label">New Password</label>
+                  <input
+                    className="form-input"
+                    type="password"
+                    placeholder="Enter new password"
+                    value={passwordForm.newPassword}
+                    onChange={e => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: '24px' }}>
+                  <label className="form-label">Confirm New Password</label>
+                  <input
+                    className="form-input"
+                    type="password"
+                    placeholder="Re-type new password"
+                    value={passwordForm.confirmPassword}
+                    onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={updatingPassword} style={{ width: '100%', justifyContent: 'center' }}>
+                  {updatingPassword ? 'Updating Password…' : '🔑 Change Password'}
+                </button>
+              </form>
+            </div>
+
+          </div>
         </div>
       )}
 

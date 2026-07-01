@@ -128,6 +128,20 @@ export const API = {
     });
   },
 
+  async saveCategories(categories) {
+    return apiFetch('/api/categories', {
+      method: 'POST',
+      body: JSON.stringify({ categories })
+    });
+  },
+
+  async changePassword(old_password, new_password) {
+    return apiFetch('/api/admin/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ old_password, new_password })
+    });
+  },
+
   logout() {
     _authed = false;
     localStorage.removeItem('admin_authed');
