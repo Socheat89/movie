@@ -258,8 +258,8 @@ export default function Watch({ dramaId, onNavigate }) {
         </div>
 
         {/* Episode Sidebar & Sponsor QR */}
-        <div className="episode-column" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="episode-list-box" style={{ position: 'relative', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '20px' }}>
+        <div className="episode-column" style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'sticky', top: 'calc(var(--nav-h) + 16px)' }}>
+          <div className="episode-dropdown-box" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '20px' }}>
             <label className="form-label" style={{ marginBottom: '10px', fontSize: '0.9rem', fontWeight: 600, display: 'block', color: 'var(--text)' }}>
               Select Episode ({episodes.length} total)
             </label>
