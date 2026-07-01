@@ -153,6 +153,15 @@ export default function Watch({ dramaId, onNavigate }) {
     return count + ' views';
   };
 
+  const getQrImageUrl = (url) => {
+    if (!url) return '';
+    const isImage = /\.(jpg|jpeg|png|webp|gif|svg)/i.test(url) || url.includes('picsum.photos');
+    if (isImage) {
+      return url;
+    }
+    return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`;
+  };
+
   return (
     <div className="watch-layout page-enter" style={{ padding: '24px 64px' }}>
       {/* Video Column */}
@@ -231,7 +240,7 @@ export default function Watch({ dramaId, onNavigate }) {
               Enjoying the stream? Help us pay for server and hosting costs by scanning the QR code below.
             </p>
             <div style={{ background: '#fff', padding: '12px', borderRadius: '12px', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)', marginBottom: '14px', overflow: 'hidden' }}>
-              <img src={sponsorQrUrl} alt="Sponsor QR Code" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+              <img src={getQrImageUrl(sponsorQrUrl)} alt="Sponsor QR Code" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
             </div>
             <span style={{ fontSize: '0.78rem', color: 'var(--accent-lt)', fontWeight: 600 }}>Thank you for your support! ❤️</span>
           </div>

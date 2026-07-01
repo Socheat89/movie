@@ -420,6 +420,15 @@ export default function Admin({ onNavigate }) {
     );
   }
 
+  const getQrImageUrl = (url) => {
+    if (!url) return '';
+    const isImage = /\.(jpg|jpeg|png|webp|gif|svg)/i.test(url) || url.includes('picsum.photos');
+    if (isImage) {
+      return url;
+    }
+    return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`;
+  };
+
   const totalEpisodesCount = dramas.reduce((acc, curr) => acc + (curr.episodeCount || 0), 0);
   const totalViewsCount = dramas.reduce((acc, curr) => acc + (curr.views || 0), 0);
   const trendingCount = dramas.filter(d => d.trending).length;
@@ -724,7 +733,7 @@ export default function Admin({ onNavigate }) {
                   <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <small style={{ color: 'var(--text-3)', marginBottom: '8px' }}>QR Preview:</small>
                     <div style={{ background: '#fff', padding: '8px', borderRadius: '8px', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--border)' }}>
-                      <img src={sponsorQrFormUrl} alt="QR Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                      <img src={getQrImageUrl(sponsorQrFormUrl)} alt="QR Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
                     </div>
                   </div>
                 )}
