@@ -1,0 +1,5 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Rewrite root sitemap.xml request to the Laravel backend dynamic sitemap.xml
+    RewriteRule ^sitemap\.xml$ backend/public/sitemap.xml [L]
+</IfModule>
