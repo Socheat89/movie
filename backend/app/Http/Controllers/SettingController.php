@@ -79,12 +79,12 @@ class SettingController extends Controller
                     @mkdir($destPath, 0755, true);
                 }
                 $file->move($destPath, $filename);
-                $url = asset('uploads/' . $filename);
+                $url = url('uploads/' . $filename);
             } catch (\Exception $e) {
                 // Fallback: save to storage/app/public/uploads which is guaranteed writable
                 try {
                     $file->storeAs('public/uploads', $filename);
-                    $url = asset('storage/uploads/' . $filename);
+                    $url = url('storage/uploads/' . $filename);
                 } catch (\Exception $ex) {
                     return response()->json(['detail' => 'Upload failed. Permissions error: ' . $ex->getMessage()], 500);
                 }
