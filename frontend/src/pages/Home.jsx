@@ -46,18 +46,21 @@ export default function Home({ onNavigate }) {
 
   useEffect(() => {
     updateSeo({
-      title: 'DramaStream — Watch K-Dramas & Asian Series Free',
-      description: 'DramaStream: Watch the latest Korean dramas, trending series, and classic K-dramas for free. No login, no sign-up. One click to stream.',
-      keywords: 'K-drama, Korean drama, Asian drama, watch free, streaming, DramaStream, mekongcyberunit',
-      url: window.location.origin + '/#/',
+      title: 'Khmer Movie | មើលភាពយន្តខ្មែរ ដោយឥតគិតថ្លៃ | DramaStream',
+      description: 'មើលភាពយន្តខ្មែរ រឿងកូរ៉េ រឿងចិន រឿងថៃ ដោយឥតគិតថ្លៃ — Khmer Movie, Korean Drama, Chinese Drama, Thai Series. Watch free online, no login required.',
+      keywords: 'khmer movie, ភាពយន្តខ្មែរ, movie, រឿងខ្មែរ, korean drama, k-drama, រឿងកូរ៉េ, chinese movie, thai movie, watch movie free, drama online, streaming free, DramaStream',
+      url: 'https://movie.mekongcyberunit.app/',
       schema: {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        "name": "DramaStream",
-        "url": window.location.origin + '/#/',
+        "name": "DramaStream — Khmer Movie",
+        "alternateName": ["ភាពយន្តខ្មែរ", "Khmer Movie", "Movie Online Free"],
+        "url": "https://movie.mekongcyberunit.app/",
+        "description": "មើលភាពយន្តខ្មែរ រឿងកូរ៉េ រឿងចិន ដោយឥតគិតថ្លៃ",
+        "inLanguage": ["km", "en"],
         "potentialAction": {
           "@type": "SearchAction",
-          "target": window.location.origin + "/#/?q={search_term_string}",
+          "target": "https://movie.mekongcyberunit.app/#/?q={search_term_string}",
           "query-input": "required name=search_term_string"
         }
       }
