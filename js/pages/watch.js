@@ -1,9 +1,9 @@
 /* =============================================================
-   DramaStream — Watch Page
+   DramaStream — Watch Page (API-driven)
    Video Player + Episode Sidebar + Drama Info
 ============================================================= */
 
-function renderWatch(dramaId) {
+async function renderWatch(dramaId) {
   const main = document.getElementById('main-content');
 
   /* ── Skeleton ──────────────────────────────────────────────── */
@@ -23,26 +23,23 @@ function renderWatch(dramaId) {
       </div>
     </div>`;
 
-  setTimeout(() => {
-    if (!dramaId) {
-      showNotFound(main);
-      return;
-    }
+  if (!dramaId) { showNotFound(main); return; }
 
-    const drama = DB.getDrama(dramaId);
-    if (!drama) {
-      showNotFound(main);
-      return;
-    }
+  try {
+    const drama = await API.getDrama(dramaId);
+    if (!drama) { showNotFound(main); return; }
 
-    const episodes  = drama.episodes || [];
-    const firstEp   = episodes[0] || null;
-    const activeId  = firstEp?.id || null;
+    const episodes = drama.episodes || [];
+    const firstEp  = episodes[0] || null;
+    const activeId = firstEp?.id || null;
 
-    main.innerHTML  = buildWatchLayout(drama, firstEp, activeId);
+    main.innerHTML = buildWatchLayout(drama, firstEp, activeId);
     bindEpisodeClicks(drama);
     updateActiveLink();
-  }, 360);
+  } catch (err) {
+    console.error('[Watch] Failed to load drama:', err);
+    showNotFound(main);
+  }
 }
 
 /* ── Not Found State ─────────────────────────────────────────── */
@@ -79,7 +76,7 @@ function buildWatchLayout(drama, activeEp, activeEpId) {
             ${drama.trending ? '<span class="trending-badge">🔥 Trending</span>' : ''}
             ${activeEp ? `<span style="color:var(--text-2);font-size:0.82rem;">Now: ${escHtml(activeEp.title)}</span>` : ''}
           </div>
-          <p class="drama-info-desc">${escHtml(drama.description)}</p>
+          <p class="drama-info-desc">${escHtml(drama.description || '')}</p>
 
           <div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;">
             <a href="#/" class="btn btn-ghost btn-sm">← All Dramas</a>
@@ -136,15 +133,10 @@ function bindEpisodeClicks(drama) {
   listEl.addEventListener('click', e => {
     const item = e.target.closest('.episode-item');
     if (!item) return;
-
-    const epId = item.dataset.epId;
-    const ep   = episodes.find(e => e.id === epId);
-    if (!ep) return;
-
-    switchEpisode(ep, epId);
+    const ep = episodes.find(e => e.id === item.dataset.epId);
+    if (ep) switchEpisode(ep, ep.id);
   });
 
-  /* Keyboard navigation */
   listEl.addEventListener('keydown', e => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const item = e.target.closest('.episode-item');
@@ -154,21 +146,18 @@ function bindEpisodeClicks(drama) {
   });
 }
 
-/* ── Switch Episode (update player + highlight) ──────────────── */
+/* ── Switch Episode ──────────────────────────────────────────── */
 function switchEpisode(ep, epId) {
-  /* Fade out → swap → fade in */
   const playerEl = document.getElementById('player-wrapper');
   if (playerEl) {
     playerEl.style.cssText = 'opacity:0;transition:opacity 0.25s ease;';
     setTimeout(() => {
-      playerEl.innerHTML = Embed.renderPlayer(ep.videoUrl);
+      playerEl.innerHTML    = Embed.renderPlayer(ep.videoUrl);
       playerEl.style.cssText = 'opacity:1;transition:opacity 0.35s ease;';
     }, 250);
   }
 
-  /* Update episode list highlights */
-  const allItems = document.querySelectorAll('.episode-item');
-  allItems.forEach(item => {
+  document.querySelectorAll('.episode-item').forEach(item => {
     item.classList.remove('active');
     const nowPlaying = item.querySelector('.ep-now-playing');
     if (nowPlaying) nowPlaying.remove();
@@ -178,7 +167,6 @@ function switchEpisode(ep, epId) {
   if (activeItem) {
     activeItem.classList.add('active');
     activeItem.insertAdjacentHTML('beforeend', '<span class="ep-now-playing">▶ Playing</span>');
-    /* Scroll into view */
     activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }

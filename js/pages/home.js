@@ -1,12 +1,12 @@
 /* =============================================================
-   DramaStream — Home Page
+   DramaStream — Home Page (API-driven)
    Hero Slider + Genre Filters + Drama Grid
 ============================================================= */
 
-function renderHome() {
+async function renderHome() {
   const main = document.getElementById('main-content');
 
-  /* Show skeleton while data "loads" */
+  /* Skeleton while loading */
   main.innerHTML = `
     <div class="skeleton sk-hero"></div>
     <div class="content-section">
@@ -23,11 +23,14 @@ function renderHome() {
       </div>
     </div>`;
 
-  /* Simulate async fetch */
-  setTimeout(() => {
-    const dramas     = DB.getDramas();
-    const trending   = dramas.filter(d => d.trending);
-    const categories = ['All', ...DB.getCategories()];
+  try {
+    const [dramas, categories] = await Promise.all([
+      API.getDramas(),
+      API.getCategories()
+    ]);
+
+    const trending = dramas.filter(d => d.trending);
+    const allCats  = ['All', ...categories];
 
     main.innerHTML = `
       <section class="hero-section" id="hero-section">
@@ -41,7 +44,7 @@ function renderHome() {
         </div>
 
         <div class="genre-filters" role="group" aria-label="Filter by genre">
-          ${categories.map((cat, i) => `
+          ${allCats.map((cat, i) => `
             <button
               class="genre-pill${i === 0 ? ' active' : ''}"
               data-genre="${cat}"
@@ -58,7 +61,19 @@ function renderHome() {
     initHeroSlider();
     initGenreFilters(dramas);
     initLazyLoad();
-  }, 380);
+
+  } catch (err) {
+    console.error('[Home] Failed to load dramas:', err);
+    main.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px;">
+        <div style="font-size:3rem;opacity:0.3;margin-bottom:16px;">⚠️</div>
+        <h2 style="font-weight:700;margin-bottom:8px;">Cannot connect to server</h2>
+        <p style="color:var(--text-2);font-size:0.9rem;margin-bottom:24px;">
+          Make sure the backend is running at <code>${API_BASE_URL}</code>
+        </p>
+        <button class="btn btn-primary" onclick="renderHome()">↺ Retry</button>
+      </div>`;
+  }
 }
 
 /* ── Hero Slider ─────────────────────────────────────────────── */
@@ -78,12 +93,12 @@ function buildHeroSlider(dramas) {
       <div class="hero-content">
         <div class="hero-badge">🔥 Trending</div>
         <h1 class="hero-title">${escHtml(d.title)}</h1>
-        <p class="hero-desc">${escHtml(d.description)}</p>
+        <p class="hero-desc">${escHtml(d.description || '')}</p>
         <div class="hero-actions">
           <a href="#/watch/${d.id}" class="btn btn-primary" id="hero-watch-${i}">▶ Watch Now</a>
           <div class="hero-meta">
             <span class="genre-badge">${escHtml(d.genre)}</span>
-            <span>${(d.episodes || []).length} episodes</span>
+            <span>${d.episodeCount || 0} episodes</span>
           </div>
         </div>
       </div>
@@ -136,7 +151,7 @@ function buildDramaCards(dramas) {
         <h3 class="drama-card-title">${escHtml(d.title)}</h3>
         <div class="drama-card-meta">
           <span class="genre-badge">${escHtml(d.genre)}</span>
-          <span class="episode-count">${(d.episodes || []).length} eps</span>
+          <span class="episode-count">${d.episodeCount || 0} eps</span>
           ${d.trending ? '<span style="font-size:0.7rem;">🔥</span>' : ''}
         </div>
       </div>
@@ -164,20 +179,16 @@ function initHeroSlider() {
   function startAuto() { timer = setInterval(() => goTo(current + 1), 5200); }
   function stopAuto()  { clearInterval(timer); }
 
-  /* Dots */
   dots.forEach((dot, i) => {
     dot.addEventListener('click', () => { stopAuto(); goTo(i); startAuto(); });
   });
 
-  /* Arrows */
   document.getElementById('hero-prev')?.addEventListener('click', () => { stopAuto(); goTo(current - 1); startAuto(); });
   document.getElementById('hero-next')?.addEventListener('click', () => { stopAuto(); goTo(current + 1); startAuto(); });
 
-  /* Pause on hover */
   section?.addEventListener('mouseenter', stopAuto);
   section?.addEventListener('mouseleave', startAuto);
 
-  /* Touch swipe support */
   let touchStartX = 0;
   section?.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
   section?.addEventListener('touchend', e => {
@@ -202,7 +213,6 @@ function initGenreFilters(allDramas) {
       const genre    = pill.dataset.genre;
       const filtered = genre === 'All' ? allDramas : allDramas.filter(d => d.genre === genre);
 
-      /* Smooth swap */
       grid.style.cssText = 'opacity:0;transform:translateY(10px);';
       setTimeout(() => {
         grid.innerHTML    = buildDramaCards(filtered);
@@ -213,7 +223,7 @@ function initGenreFilters(allDramas) {
   });
 }
 
-/* ── Lazy Load with IntersectionObserver ─────────────────────── */
+/* ── Lazy Load ───────────────────────────────────────────────── */
 function initLazyLoad() {
   const imgs = document.querySelectorAll('img.lazy-img[data-src]');
   if (!imgs.length) return;
@@ -222,10 +232,10 @@ function initLazyLoad() {
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (!entry.isIntersecting) return;
-        const img  = entry.target;
-        const src  = img.dataset.src;
+        const img = entry.target;
+        const src = img.dataset.src;
         if (!src) return;
-        img.src = src;
+        img.src    = src;
         img.onload  = () => img.classList.add('loaded');
         img.onerror = () => {
           img.src = `https://picsum.photos/seed/${Math.floor(Math.random() * 9999)}/300/450`;
@@ -234,14 +244,9 @@ function initLazyLoad() {
         observer.unobserve(img);
       });
     }, { rootMargin: '160px 0px' });
-
     imgs.forEach(img => observer.observe(img));
   } else {
-    /* Fallback for older browsers */
-    imgs.forEach(img => {
-      img.src = img.dataset.src;
-      img.classList.add('loaded');
-    });
+    imgs.forEach(img => { img.src = img.dataset.src; img.classList.add('loaded'); });
   }
 }
 
