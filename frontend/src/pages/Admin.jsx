@@ -101,99 +101,22 @@ export default function Admin({ onNavigate }) {
     showToast('Logged out.', 'info');
   };
 
-  // ── Scrape / Import logic ──────────────────────────────────────
   const handleScrape = async () => {
     if (!importUrl.trim()) {
       showToast('Please paste a valid website URL first.', 'error');
       return;
     }
     setScraping(true);
-    showToast('Fetching movie details... Please wait.', 'info');
-
-    let html = '';
-    let success = false;
-    const proxyBuilders = [
-      u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      u => `https://yacdn.org/proxy/${u}`
-    ];
-
-    for (const buildProxyUrl of proxyBuilders) {
-      try {
-        const res = await fetch(buildProxyUrl(importUrl));
-        if (res.ok) {
-          html = await res.text();
-          if (html && html.trim().length > 0) {
-            success = true;
-            break;
-          }
-        }
-      } catch (e) {
-        // try next proxy
-      }
-    }
-
-    if (!success) {
-      showToast('CORS proxy servers are unreachable. Please try again.', 'error');
-      setScraping(false);
-      return;
-    }
+    showToast('Fetching and importing drama details... Please wait.', 'info');
 
     try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-
-      let title = doc.querySelector('meta[property="og:title"]')?.getAttribute('content')
-                  || doc.querySelector('h3.fst-italic')?.textContent || 'Scraped Drama';
-      title = title.replace(/\[\d+\.END\]/gi, '').replace(/\[\d+\.EP\]/gi, '').trim();
-
-      const description = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || 'No description.';
-      const poster = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || 'https://picsum.photos/300/450';
-
-      let episodes = [];
-      for (const s of doc.querySelectorAll('script')) {
-        if (s.textContent.includes('const videos =')) {
-          const match = s.textContent.match(/const\s+videos\s*=\s*(\[[\s\S]*?\])/);
-          if (match) {
-            try {
-              const videos = (new Function(`return ${match[1]};`))();
-              if (Array.isArray(videos)) {
-                episodes = videos.map((v, i) => ({
-                  id: 'ep_' + Date.now() + '_' + i,
-                  episode: i + 1,
-                  title: v.title || `Episode ${i + 1}`,
-                  videoUrl: v.file || v.videoUrl || ''
-                }));
-              }
-            } catch (e) {
-              // skip
-            }
-          }
-          break;
-        }
-      }
-
-      if (!episodes.length) {
-        showToast('Could not find any episode videos on this page.', 'error');
-        setScraping(false);
-        return;
-      }
-
-      const scrapedDrama = await API.addDrama({
-        title,
-        description,
-        poster,
-        genre: 'Action',
-        trending: true,
-        episodes
-      });
-
-      showToast(`Imported "${scrapedDrama.title}" (${episodes.length} episodes)! 🎉`, 'success');
+      const res = await API.scrapeUrl(importUrl);
+      showToast(`Imported "${res.title}" (${res.episodeCount} episodes)! 🎉`, 'success');
       setImportUrl('');
       loadDashboardData();
     } catch (err) {
       console.error(err);
-      showToast('Failed to parse the website data.', 'error');
+      showToast('Failed to scrape: ' + (err.message || 'unknown error'), 'error');
     } finally {
       setScraping(false);
     }

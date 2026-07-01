@@ -121,6 +121,13 @@ export const API = {
     return _authed;
   },
 
+  async scrapeUrl(url) {
+    return apiFetch('/api/admin/scrape', {
+      method: 'POST',
+      body: JSON.stringify({ url })
+    });
+  },
+
   logout() {
     _authed = false;
     localStorage.removeItem('admin_authed');
