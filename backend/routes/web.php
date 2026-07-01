@@ -13,6 +13,18 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+use Illuminate\Support\Facades\Artisan;
+
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::get('/init-app', function () {
+    try {
+        Artisan::call('key:generate');
+        Artisan::call('migrate');
+        return "App Initialized & Migrations Run successfully! Key: " . Artisan::output();
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
 });
