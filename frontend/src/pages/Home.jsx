@@ -403,7 +403,8 @@ export default function Home({ onNavigate }) {
                   </div>
                 </div>
               </article>
-            ))}
+            ))
+          )}
           </div>
         </section>
       </div>
