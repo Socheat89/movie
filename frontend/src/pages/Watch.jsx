@@ -9,6 +9,35 @@ export default function Watch({ dramaId, onNavigate }) {
   const [error, setError] = useState(false);
   const [sponsorQrUrl, setSponsorQrUrl] = useState('');
   const [recommendations, setRecommendations] = useState([]);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('favorites');
+      const favs = saved ? JSON.parse(saved) : [];
+      setIsFavorite(favs.includes(dramaId));
+    } catch (err) {
+      console.error(err);
+    }
+  }, [dramaId]);
+
+  const toggleFavorite = () => {
+    try {
+      const saved = localStorage.getItem('favorites');
+      let favs = saved ? JSON.parse(saved) : [];
+      const index = favs.indexOf(dramaId);
+      if (index > -1) {
+        favs.splice(index, 1);
+        setIsFavorite(false);
+      } else {
+        favs.push(dramaId);
+        setIsFavorite(true);
+      }
+      localStorage.setItem('favorites', JSON.stringify(favs));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     async function loadDrama() {
@@ -184,7 +213,28 @@ export default function Watch({ dramaId, onNavigate }) {
           </div>
 
           <div className="drama-info">
-            <h1 className="drama-info-title">{drama.title}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '8px' }}>
+              <h1 className="drama-info-title" style={{ margin: 0 }}>{drama.title}</h1>
+              <button
+                onClick={toggleFavorite}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '100px',
+                  padding: '8px 18px',
+                  fontSize: '0.85rem',
+                  color: isFavorite ? '#ff4b4b' : 'var(--text-2)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {isFavorite ? '❤️ In Favorites' : '🤍 Add to Favorites'}
+              </button>
+            </div>
             <div className="drama-info-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
               <span className="genre-badge">{drama.genre}</span>
               <span style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>{drama.year || '2025'}</span>
