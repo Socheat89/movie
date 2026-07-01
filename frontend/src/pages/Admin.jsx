@@ -16,6 +16,10 @@ export default function Admin({ onNavigate }) {
   // Scraper State
   const [importUrl, setImportUrl] = useState('');
   const [scraping, setScraping] = useState(false);
+  const [scrapeProgress, setScrapeProgress] = useState(0);
+
+  // Table action dropdown state
+  const [activeDropdownId, setActiveDropdownId] = useState(null);
 
   // Drama Modal State
   const [dramaModalOpen, setDramaModalOpen] = useState(false);
@@ -131,18 +135,33 @@ export default function Admin({ onNavigate }) {
       return;
     }
     setScraping(true);
-    showToast('Fetching and importing drama details... Please wait.', 'info');
+    setScrapeProgress(10);
+
+    const interval = setInterval(() => {
+      setScrapeProgress(prev => {
+        if (prev >= 92) {
+          clearInterval(interval);
+          return 92;
+        }
+        return prev + Math.floor(Math.random() * 8) + 2;
+      });
+    }, 350);
 
     try {
       const res = await API.scrapeUrl(importUrl);
+      clearInterval(interval);
+      setScrapeProgress(100);
       showToast(`Imported "${res.title}" (${res.episodeCount} episodes)! 🎉`, 'success');
       setImportUrl('');
       loadDashboardData();
     } catch (err) {
+      clearInterval(interval);
+      setScrapeProgress(0);
       console.error(err);
       showToast('Failed to scrape: ' + (err.message || 'unknown error'), 'error');
     } finally {
       setScraping(false);
+      setTimeout(() => setScrapeProgress(0), 1000);
     }
   };
 
@@ -399,6 +418,15 @@ export default function Admin({ onNavigate }) {
     }
   };
 
+  const getQrImageUrl = (url) => {
+    if (!url) return '';
+    const isImage = /\.(jpg|jpeg|png|webp|gif|svg)/i.test(url) || url.includes('picsum.photos');
+    if (isImage) {
+      return url;
+    }
+    return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`;
+  };
+
   // Filter dramas by search
   const filteredDramas = dramas.filter(d =>
     d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -438,394 +466,504 @@ export default function Admin({ onNavigate }) {
     );
   }
 
-  const getQrImageUrl = (url) => {
-    if (!url) return '';
-    const isImage = /\.(jpg|jpeg|png|webp|gif|svg)/i.test(url) || url.includes('picsum.photos');
-    if (isImage) {
-      return url;
-    }
-    return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`;
-  };
-
   const totalEpisodesCount = dramas.reduce((acc, curr) => acc + (curr.episodeCount || 0), 0);
   const totalViewsCount = dramas.reduce((acc, curr) => acc + (curr.views || 0), 0);
   const trendingCount = dramas.filter(d => d.trending).length;
 
   return (
-    <div className="admin-layout page-enter" style={{ padding: '24px 64px' }}>
-      {toast.show && <div className={`toast ${toast.type} show`}>{toast.message}</div>}
+    <>
+      <div className="admin-layout page-enter" style={{ padding: '24px 64px' }}>
+        {toast.show && <div className={`toast ${toast.type} show`}>{toast.message}</div>}
 
-      {/* Header */}
-      <div className="admin-header" style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
-          <div>
-            <h1 className="admin-title" style={{ fontSize: '2.2rem', fontWeight: 800 }}>Admin Dashboard</h1>
-            <p className="admin-subtitle">Manage DramaStream content — dramas, episodes, categories, and payment settings</p>
+        {/* Header */}
+        <div className="admin-header" style={{ marginBottom: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
+            <div>
+              <h1 className="admin-title" style={{ fontSize: '2.2rem', fontWeight: 800 }}>Admin Dashboard</h1>
+              <p className="admin-subtitle">Manage DramaStream content — dramas, episodes, categories, and payment settings</p>
+            </div>
+            <button className="btn btn-ghost btn-sm" onClick={handleLogout} style={{ borderRadius: 'var(--r-sm)' }}>← Logout</button>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={handleLogout} style={{ borderRadius: 'var(--r-sm)' }}>← Logout</button>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="admin-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
-          <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{dramas.length}</div>
-          <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Dramas</div>
+        {/* Stats */}
+        <div className="admin-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+          <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
+            <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{dramas.length}</div>
+            <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Dramas</div>
+          </div>
+          <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
+            <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{totalEpisodesCount}</div>
+            <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Episodes</div>
+          </div>
+          <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
+            <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{totalViewsCount >= 1000 ? (totalViewsCount / 1000).toFixed(1) + 'K' : totalViewsCount}</div>
+            <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Views</div>
+          </div>
+          <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
+            <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{categories.length}</div>
+            <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Categories</div>
+          </div>
         </div>
-        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
-          <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{totalEpisodesCount}</div>
-          <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Episodes</div>
-        </div>
-        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
-          <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{totalViewsCount >= 1000 ? (totalViewsCount / 1000).toFixed(1) + 'K' : totalViewsCount}</div>
-          <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Views</div>
-        </div>
-        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
-          <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{categories.length}</div>
-          <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Categories</div>
-        </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="admin-tabs" role="tablist" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '1px', marginBottom: '28px' }}>
-        <button className={`admin-tab ${activeTab === 'dramas' ? 'active' : ''}`} onClick={() => setActiveTab('dramas')}>
-          🎬 Dramas
-        </button>
-        <button className={`admin-tab ${activeTab === 'episodes' ? 'active' : ''}`} onClick={() => setActiveTab('episodes')}>
-          ▶ Episodes
-        </button>
-        <button className={`admin-tab ${activeTab === 'categories' ? 'active' : ''}`} onClick={() => setActiveTab('categories')}>
-          🏷️ Categories
-        </button>
-        <button className={`admin-tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-          ⚙️ Settings &amp; Profile
-        </button>
-      </div>
+        {/* Tabs */}
+        <div className="admin-tabs" role="tablist" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '1px', marginBottom: '28px' }}>
+          <button className={`admin-tab ${activeTab === 'dramas' ? 'active' : ''}`} onClick={() => setActiveTab('dramas')}>
+            🎬 Dramas
+          </button>
+          <button className={`admin-tab ${activeTab === 'episodes' ? 'active' : ''}`} onClick={() => setActiveTab('episodes')}>
+            ▶ Episodes
+          </button>
+          <button className={`admin-tab ${activeTab === 'categories' ? 'active' : ''}`} onClick={() => setActiveTab('categories')}>
+            🏷️ Categories
+          </button>
+          <button className={`admin-tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+            ⚙️ Settings &amp; Profile
+          </button>
+        </div>
 
-      {/* Tab Body */}
-      {activeTab === 'dramas' && (
-        <div id="admin-tab-body" className="page-enter">
-          <div className="admin-toolbar" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', width: '100%', marginBottom: '20px' }}>
-            <input
-              className="search-input"
-              type="search"
-              placeholder="🔍 Search dramas by title or genre…"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              style={{ flex: 1, minWidth: '200px' }}
-            />
-
-            {/* Import from URL Form */}
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 2, minWidth: '300px' }}>
+        {/* Tab Body */}
+        {activeTab === 'dramas' && (
+          <div id="admin-tab-body" className="page-enter">
+            <div className="admin-toolbar" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', width: '100%', marginBottom: '20px' }}>
               <input
-                className="form-input"
-                type="url"
-                placeholder="Paste KhmerKomsan movie URL..."
-                value={importUrl}
-                onChange={e => setImportUrl(e.target.value)}
-                style={{ margin: 0, flex: 1 }}
+                className="search-input"
+                type="search"
+                placeholder="🔍 Search dramas by title or genre…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                style={{ flex: 1, minWidth: '200px' }}
               />
-              <button className="btn btn-ghost" onClick={handleScrape} disabled={scraping}>
-                {scraping ? '⚡ Fetching…' : '⚡ Fetch & Import'}
-              </button>
-            </div>
 
-            <button className="btn btn-ghost" onClick={() => document.getElementById('json-upload').click()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              📂 Upload JSON
-            </button>
-            <input type="file" id="json-upload" accept=".json" onChange={handleJsonUpload} style={{ display: 'none' }} />
-            <button className="btn btn-primary" onClick={() => openDramaModal(null)}>+ Add Drama</button>
-          </div>
-
-          <div className="admin-table-wrapper" style={{ background: 'var(--bg-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Poster</th>
-                  <th>Title</th>
-                  <th>Genre</th>
-                  <th>Year</th>
-                  <th>Rating</th>
-                  <th>Views</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredDramas.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', padding: '52px', color: 'var(--text-2)' }}>
-                      No dramas yet. Click <strong>+ Add Drama</strong> or use the Link Scraper tool above.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredDramas.map(d => (
-                    <tr key={d.id}>
-                      <td>
-                        <img className="table-poster" src={d.poster} alt={d.title} onError={(e) => { e.target.style.background = 'var(--bg-3)'; e.target.removeAttribute('src'); }} />
-                      </td>
-                      <td style={{ fontWeight: 600, maxWidth: '220px', wordBreak: 'break-word' }}>{d.title}</td>
-                      <td><span className="genre-badge">{d.genre}</span></td>
-                      <td style={{ color: 'var(--text-2)' }}>{d.year || '2025'}</td>
-                      <td style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</td>
-                      <td style={{ color: 'var(--text-3)' }}>{d.views || 0}</td>
-                      <td>
-                        <div className="table-actions">
-                          <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openDramaModal(d)} title="Edit">✏️</button>
-                          <button className="btn btn-ghost btn-sm btn-icon" onClick={() => deleteDrama(d.id, d.title)} title="Delete" style={{ color: 'var(--red)' }}>🗑️</button>
-                          <button className="btn btn-ghost btn-sm btn-icon" onClick={() => onNavigate(`/watch/${d.id}`)} title="View on site">👁️</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'episodes' && (
-        <div id="admin-tab-body" className="page-enter">
-          {dramas.length === 0 ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-2)' }}>
-              No dramas found.{' '}
-              <button className="btn btn-link" onClick={() => setActiveTab('dramas')} style={{ color: 'var(--accent-lt)', textDecoration: 'underline' }}>
-                Add a drama first →
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="admin-toolbar" style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-                <select
-                  className="search-input"
-                  value={activeDramaId || ''}
-                  onChange={e => setActiveDramaId(e.target.value)}
-                  style={{ width: 'auto', maxWidth: '320px' }}
-                >
-                  {dramas.map(d => (
-                    <option key={d.id} value={d.id}>{d.title}</option>
-                  ))}
-                </select>
-                <button className="btn btn-primary" onClick={() => openEpisodeModal(null)}>+ Add Episode</button>
+              {/* Import from URL Form */}
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 2, minWidth: '300px' }}>
+                <input
+                  className="form-input"
+                  type="url"
+                  placeholder="Paste KhmerKomsan movie URL..."
+                  value={importUrl}
+                  onChange={e => setImportUrl(e.target.value)}
+                  style={{ margin: 0, flex: 1 }}
+                />
+                <button className="btn btn-ghost" onClick={handleScrape} disabled={scraping}>
+                  {scraping ? '⚡ Fetching…' : '⚡ Fetch & Import'}
+                </button>
               </div>
 
-              {loadingEpisodes ? (
-                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-2)' }}>Loading episodes…</div>
-              ) : (
-                <div className="admin-table-wrapper" style={{ background: 'var(--bg-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Title</th>
-                        <th>Video URL</th>
-                        <th>Platform</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {!activeDramaDetails || !activeDramaDetails.episodes || activeDramaDetails.episodes.length === 0 ? (
-                        <tr>
-                          <td colSpan="5" style={{ textAlign: 'center', padding: '48px', color: 'var(--text-2)' }}>
-                            No episodes yet. Click <strong>+ Add Episode</strong> to get started.
-                          </td>
-                        </tr>
-                      ) : (
-                        activeDramaDetails.episodes.map((ep, i) => (
-                          <tr key={ep.id}>
-                            <td style={{ color: 'var(--text-2)', fontWeight: 600 }}>{i + 1}</td>
-                            <td style={{ fontWeight: 500 }}>{ep.title}</td>
-                            <td style={{ maxWidth: '200px' }}>
-                              <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.78rem', color: 'var(--text-2)' }} title={ep.videoUrl}>
-                                {ep.videoUrl || <em style={{ color: 'var(--text-3)' }}>None</em>}
-                              </span>
-                            </td>
-                            <td>
-                              <span style={{ fontSize: '0.72rem', padding: '2px 9px', background: 'var(--bg-3)', borderRadius: '100px', color: 'var(--text-2)' }}>
-                                {Embed.getType(ep.videoUrl)}
-                              </span>
-                            </td>
-                            <td>
-                              <div className="table-actions">
-                                <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openEpisodeModal(ep)} title="Edit">✏️</button>
-                                <button className="btn btn-ghost btn-sm btn-icon" onClick={() => deleteEpisode(ep.id, ep.title)} title="Delete" style={{ color: 'var(--red)' }}>🗑️</button>
+              <button className="btn btn-ghost" onClick={() => document.getElementById('json-upload').click()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                📂 Upload JSON
+              </button>
+              <input type="file" id="json-upload" accept=".json" onChange={handleJsonUpload} style={{ display: 'none' }} />
+              <button className="btn btn-primary" onClick={() => openDramaModal(null)}>+ Add Drama</button>
+            </div>
+
+            {/* Fetch & Import Progress Bar */}
+            {scrapeProgress > 0 && (
+              <div style={{ width: '100%', background: 'var(--bg-card)', borderRadius: 'var(--r-lg)', padding: '16px 20px', border: '1px solid var(--border)', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.82rem', color: 'var(--text-2)' }}>
+                  <span>Importing Drama metadata &amp; episodes...</span>
+                  <span style={{ fontWeight: 'bold', color: 'var(--accent-lt)' }}>{scrapeProgress}%</span>
+                </div>
+                <div style={{ width: '100%', background: 'rgba(255,255,255,0.06)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      width: `${scrapeProgress}%`,
+                      height: '100%',
+                      background: 'linear-gradient(to right, var(--accent-lt), var(--accent))',
+                      transition: 'width 0.3s ease',
+                      boxShadow: '0 0 12px var(--accent-glow)'
+                    }}
+                  ></div>
+                </div>
+              </div>
+            )}
+
+            <div className="admin-table-wrapper" style={{ background: 'var(--bg-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Poster</th>
+                    <th>Title</th>
+                    <th>Genre</th>
+                    <th>Year</th>
+                    <th>Rating</th>
+                    <th>Views</th>
+                    <th style={{ textAlign: 'right', paddingRight: '28px' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredDramas.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '52px', color: 'var(--text-2)' }}>
+                        No dramas yet. Click <strong>+ Add Drama</strong> or use the Link Scraper tool above.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredDramas.map(d => (
+                      <tr key={d.id}>
+                        <td>
+                          <img className="table-poster" src={d.poster} alt={d.title} onError={(e) => { e.target.style.background = 'var(--bg-3)'; e.target.removeAttribute('src'); }} />
+                        </td>
+                        <td style={{ fontWeight: 600, maxWidth: '220px', wordBreak: 'break-word' }}>{d.title}</td>
+                        <td><span className="genre-badge">{d.genre}</span></td>
+                        <td style={{ color: 'var(--text-2)' }}>{d.year || '2025'}</td>
+                        <td style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</td>
+                        <td style={{ color: 'var(--text-3)' }}>{d.views || 0}</td>
+                        <td style={{ textAlign: 'right', paddingRight: '24px', position: 'relative' }}>
+                          <button
+                            className="btn btn-ghost btn-sm btn-icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveDropdownId(activeDropdownId === d.id ? null : d.id);
+                            }}
+                            style={{ fontSize: '1.2rem', fontWeight: 'bold', width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                            title="Actions menu"
+                          >
+                            ⋮
+                          </button>
+                          {activeDropdownId === d.id && (
+                            <>
+                              {/* Overlay for clicking outside */}
+                              <div
+                                onClick={() => setActiveDropdownId(null)}
+                                style={{ position: 'fixed', inset: 0, zIndex: 10, cursor: 'default' }}
+                              ></div>
+                              
+                              {/* Actions Dropdown Content */}
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  right: '24px',
+                                  top: '40px',
+                                  background: 'var(--bg-2)',
+                                  border: '1px solid var(--border)',
+                                  borderRadius: 'var(--r-sm)',
+                                  boxShadow: 'var(--shadow-lg)',
+                                  zIndex: 11,
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  minWidth: '150px',
+                                  overflow: 'hidden',
+                                  textAlign: 'left'
+                                }}
+                              >
+                                <button
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    padding: '10px 14px',
+                                    fontSize: '0.85rem',
+                                    width: '100%',
+                                    color: 'var(--text)',
+                                    background: 'transparent',
+                                    cursor: 'pointer'
+                                  }}
+                                  onClick={() => {
+                                    setActiveDropdownId(null);
+                                    openDramaModal(d);
+                                  }}
+                                  className="dropdown-action-btn"
+                                >
+                                  ✏️ Edit Drama
+                                </button>
+                                <button
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    padding: '10px 14px',
+                                    fontSize: '0.85rem',
+                                    width: '100%',
+                                    color: 'var(--text)',
+                                    background: 'transparent',
+                                    cursor: 'pointer'
+                                  }}
+                                  onClick={() => {
+                                    setActiveDropdownId(null);
+                                    onNavigate(`/watch/${d.id}`);
+                                  }}
+                                  className="dropdown-action-btn"
+                                >
+                                  👁️ View on Site
+                                </button>
+                                <button
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    padding: '10px 14px',
+                                    fontSize: '0.85rem',
+                                    width: '100%',
+                                    color: 'var(--red)',
+                                    background: 'transparent',
+                                    cursor: 'pointer',
+                                    borderTop: '1px solid var(--border)'
+                                  }}
+                                  onClick={() => {
+                                    setActiveDropdownId(null);
+                                    deleteDrama(d.id, d.title);
+                                  }}
+                                  className="dropdown-action-btn"
+                                >
+                                  🗑️ Delete
+                                </button>
                               </div>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'episodes' && (
+          <div id="admin-tab-body" className="page-enter">
+            {dramas.length === 0 ? (
+              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-2)' }}>
+                No dramas found.{' '}
+                <button className="btn btn-link" onClick={() => setActiveTab('dramas')} style={{ color: 'var(--accent-lt)', textDecoration: 'underline' }}>
+                  Add a drama first →
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="admin-toolbar" style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                  <select
+                    className="search-input"
+                    value={activeDramaId || ''}
+                    onChange={e => setActiveDramaId(e.target.value)}
+                    style={{ width: 'auto', maxWidth: '320px' }}
+                  >
+                    {dramas.map(d => (
+                      <option key={d.id} value={d.id}>{d.title}</option>
+                    ))}
+                  </select>
+                  <button className="btn btn-primary" onClick={() => openEpisodeModal(null)}>+ Add Episode</button>
+                </div>
+
+                {loadingEpisodes ? (
+                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-2)' }}>Loading episodes…</div>
+                ) : (
+                  <div className="admin-table-wrapper" style={{ background: 'var(--bg-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Title</th>
+                          <th>Video URL</th>
+                          <th>Platform</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {!activeDramaDetails || !activeDramaDetails.episodes || activeDramaDetails.episodes.length === 0 ? (
+                          <tr>
+                            <td colSpan="5" style={{ textAlign: 'center', padding: '48px', color: 'var(--text-2)' }}>
+                              No episodes yet. Click <strong>+ Add Episode</strong> to get started.
                             </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'categories' && (
-        <div id="admin-tab-body" className="page-enter">
-          <div style={{ maxWidth: '750px', background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Manage Movie Categories</h2>
-            <p style={{ color: 'var(--text-2)', fontSize: '0.85rem', marginBottom: '24px' }}>
-              Add, remove, and sort categories. Make sure to click <strong>Save Categories</strong> to apply changes to the website filters.
-            </p>
-
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-              <input
-                className="form-input"
-                type="text"
-                placeholder="Enter new category name (e.g. Action, Horror)"
-                value={newCategoryName}
-                onChange={e => setNewCategoryName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleAddCategory(); }}
-                style={{ margin: 0 }}
-              />
-              <button className="btn btn-primary" onClick={handleAddCategory}>Add</button>
-            </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', minHeight: '80px', padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border)', borderRadius: 'var(--r)', marginBottom: '32px' }}>
-              {categories.length === 0 ? (
-                <div style={{ color: 'var(--text-3)', fontSize: '0.9rem', width: '100%', textAlign: 'center', alignSelf: 'center' }}>No categories added.</div>
-              ) : (
-                categories.map(cat => (
-                  <span
-                    key={cat}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      background: 'var(--bg-3)',
-                      color: 'var(--text)',
-                      padding: '6px 14px',
-                      borderRadius: '100px',
-                      fontSize: '0.88rem',
-                      fontWeight: 500,
-                      border: '1px solid var(--border)'
-                    }}
-                  >
-                    {cat}
-                    <button
-                      onClick={() => handleDeleteCategory(cat)}
-                      style={{ color: 'var(--red)', fontSize: '1rem', fontWeight: 'bold', padding: '0 2px' }}
-                      title="Remove"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))
-              )}
-            </div>
-
-            <button className="btn btn-primary" onClick={handleSaveCategories} disabled={savingCategories} style={{ gap: '8px' }}>
-              {savingCategories ? 'Saving…' : '💾 Save Categories'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'settings' && (
-        <div id="admin-tab-body" className="page-enter">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', maxWidth: '950px' }}>
-            
-            {/* Sponsor QR Settings */}
-            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
-              <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '4px' }}>☕ Sponsor QR Code</h2>
-              <p style={{ color: 'var(--text-2)', fontSize: '0.82rem', marginBottom: '20px' }}>
-                Paste the URL of your payment QR code (e.g. ABA Pay, ACLEDA, or any public image URL) to show on the watch page.
-              </p>
-
-              <form onSubmit={handleSaveSponsorQr} novalidate>
-                <div className="form-group" style={{ marginBottom: '16px' }}>
-                  <label className="form-label">Sponsor QR Code Image URL</label>
-                  <input
-                    className="form-input"
-                    type="url"
-                    placeholder="e.g. https://domain.com/aba_qr.jpg"
-                    value={sponsorQrFormUrl}
-                    onChange={e => setSponsorQrFormUrl(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label className="form-label">Or Upload QR Image File</label>
-                  <input
-                    className="form-input"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleQrFileUpload}
-                    style={{ border: 'none', padding: '6px 0', background: 'transparent' }}
-                  />
-                  {uploadingQr && <small style={{ color: 'var(--accent-lt)', display: 'block', marginTop: '4px' }}>Uploading file...</small>}
-                </div>
-                
-                {sponsorQrFormUrl && (
-                  <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <small style={{ color: 'var(--text-3)', marginBottom: '8px' }}>QR Preview:</small>
-                    <div style={{ background: '#fff', padding: '8px', borderRadius: '8px', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--border)' }}>
-                      <img src={getQrImageUrl(sponsorQrFormUrl)} alt="QR Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
-                    </div>
+                        ) : (
+                          activeDramaDetails.episodes.map((ep, i) => (
+                            <tr key={ep.id}>
+                              <td style={{ color: 'var(--text-2)', fontWeight: 600 }}>{i + 1}</td>
+                              <td style={{ fontWeight: 500 }}>{ep.title}</td>
+                              <td style={{ maxWidth: '200px' }}>
+                                <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.78rem', color: 'var(--text-2)' }} title={ep.videoUrl}>
+                                  {ep.videoUrl || <em style={{ color: 'var(--text-3)' }}>None</em>}
+                                </span>
+                              </td>
+                              <td>
+                                <span style={{ fontSize: '0.72rem', padding: '2px 9px', background: 'var(--bg-3)', borderRadius: '100px', color: 'var(--text-2)' }}>
+                                  {Embed.getType(ep.videoUrl)}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="table-actions">
+                                  <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openEpisodeModal(ep)} title="Edit">✏️</button>
+                                  <button className="btn btn-ghost btn-sm btn-icon" onClick={() => deleteEpisode(ep.id, ep.title)} title="Delete" style={{ color: 'var(--red)' }}>🗑️</button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 )}
+              </>
+            )}
+          </div>
+        )}
 
-                <button type="submit" className="btn btn-primary" disabled={savingSponsorQr} style={{ width: '100%', justifyContent: 'center' }}>
-                  {savingSponsorQr ? 'Saving…' : '💾 Save QR Code'}
-                </button>
-              </form>
-            </div>
-
-            {/* Change Password Form */}
-            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
-              <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '4px' }}>🔑 Update Password</h2>
-              <p style={{ color: 'var(--text-2)', fontSize: '0.82rem', marginBottom: '20px' }}>
-                Change your dashboard entry password. Make sure to choose a secure password.
+        {activeTab === 'categories' && (
+          <div id="admin-tab-body" className="page-enter">
+            <div style={{ maxWidth: '750px', background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Manage Movie Categories</h2>
+              <p style={{ color: 'var(--text-2)', fontSize: '0.85rem', marginBottom: '24px' }}>
+                Add, remove, and sort categories. Make sure to click <strong>Save Categories</strong> to apply changes to the website filters.
               </p>
 
-              <form onSubmit={handleUpdatePassword} novalidate>
-                <div className="form-group" style={{ marginBottom: '16px' }}>
-                  <label className="form-label">Current Password</label>
-                  <input
-                    className="form-input"
-                    type="password"
-                    placeholder="Enter current password"
-                    value={passwordForm.oldPassword}
-                    onChange={e => setPasswordForm(prev => ({ ...prev, oldPassword: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: '16px' }}>
-                  <label className="form-label">New Password</label>
-                  <input
-                    className="form-input"
-                    type="password"
-                    placeholder="Enter new password"
-                    value={passwordForm.newPassword}
-                    onChange={e => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: '24px' }}>
-                  <label className="form-label">Confirm New Password</label>
-                  <input
-                    className="form-input"
-                    type="password"
-                    placeholder="Re-type new password"
-                    value={passwordForm.confirmPassword}
-                    onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    required
-                  />
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={updatingPassword} style={{ width: '100%', justifyContent: 'center' }}>
-                  {updatingPassword ? 'Updating Password…' : 'Change Password'}
-                </button>
-              </form>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+                <input
+                  className="form-input"
+                  type="text"
+                  placeholder="Enter new category name (e.g. Action, Horror)"
+                  value={newCategoryName}
+                  onChange={e => setNewCategoryName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleAddCategory(); }}
+                  style={{ margin: 0 }}
+                />
+                <button className="btn btn-primary" onClick={handleAddCategory}>Add</button>
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', minHeight: '80px', padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border)', borderRadius: 'var(--r)', marginBottom: '32px' }}>
+                {categories.length === 0 ? (
+                  <div style={{ color: 'var(--text-3)', fontSize: '0.9rem', width: '100%', textAlign: 'center', alignSelf: 'center' }}>No categories added.</div>
+                ) : (
+                  categories.map(cat => (
+                    <span
+                      key={cat}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: 'var(--bg-3)',
+                        color: 'var(--text)',
+                        padding: '6px 14px',
+                        borderRadius: '100px',
+                        fontSize: '0.88rem',
+                        fontWeight: 500,
+                        border: '1px solid var(--border)'
+                      }}
+                    >
+                      {cat}
+                      <button
+                        onClick={() => handleDeleteCategory(cat)}
+                        style={{ color: 'var(--red)', fontSize: '1rem', fontWeight: 'bold', padding: '0 2px' }}
+                        title="Remove"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))
+                )}
+              </div>
+
+              <button className="btn btn-primary" onClick={handleSaveCategories} disabled={savingCategories} style={{ gap: '8px' }}>
+                {savingCategories ? 'Saving…' : '💾 Save Categories'}
+              </button>
             </div>
-
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Drama Modal */}
+        {activeTab === 'settings' && (
+          <div id="admin-tab-body" className="page-enter">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', maxWidth: '950px' }}>
+              
+              {/* Sponsor QR Settings */}
+              <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
+                <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '4px' }}>☕ Sponsor QR Code</h2>
+                <p style={{ color: 'var(--text-2)', fontSize: '0.82rem', marginBottom: '20px' }}>
+                  Paste the URL of your payment QR code (e.g. ABA Pay, ACLEDA, or any public image URL) to show on the watch page.
+                </p>
+
+                <form onSubmit={handleSaveSponsorQr} novalidate>
+                  <div className="form-group" style={{ marginBottom: '16px' }}>
+                    <label className="form-label">Sponsor QR Code Image URL</label>
+                    <input
+                      className="form-input"
+                      type="url"
+                      placeholder="e.g. https://domain.com/aba_qr.jpg"
+                      value={sponsorQrFormUrl}
+                      onChange={e => setSponsorQrFormUrl(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '20px' }}>
+                    <label className="form-label">Or Upload QR Image File</label>
+                    <input
+                      className="form-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleQrFileUpload}
+                      style={{ border: 'none', padding: '6px 0', background: 'transparent' }}
+                    />
+                    {uploadingQr && <small style={{ color: 'var(--accent-lt)', display: 'block', marginTop: '4px' }}>Uploading file...</small>}
+                  </div>
+                  
+                  {sponsorQrFormUrl && (
+                    <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <small style={{ color: 'var(--text-3)', marginBottom: '8px' }}>QR Preview:</small>
+                      <div style={{ background: '#fff', padding: '8px', borderRadius: '8px', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <img src={getQrImageUrl(sponsorQrFormUrl)} alt="QR Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                      </div>
+                    </div>
+                  )}
+
+                  <button type="submit" className="btn btn-primary" disabled={savingSponsorQr} style={{ width: '100%', justifyContent: 'center' }}>
+                    {savingSponsorQr ? 'Saving…' : '💾 Save QR Code'}
+                  </button>
+                </form>
+              </div>
+
+              {/* Change Password Form */}
+              <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
+                <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '4px' }}>🔑 Update Password</h2>
+                <p style={{ color: 'var(--text-2)', fontSize: '0.82rem', marginBottom: '20px' }}>
+                  Change your dashboard entry password. Make sure to choose a secure password.
+                </p>
+
+                <form onSubmit={handleUpdatePassword} novalidate>
+                  <div className="form-group" style={{ marginBottom: '16px' }}>
+                    <label className="form-label">Current Password</label>
+                    <input
+                      className="form-input"
+                      type="password"
+                      placeholder="Enter current password"
+                      value={passwordForm.oldPassword}
+                      onChange={e => setPasswordForm(prev => ({ ...prev, oldPassword: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '16px' }}>
+                    <label className="form-label">New Password</label>
+                    <input
+                      className="form-input"
+                      type="password"
+                      placeholder="Enter new password"
+                      value={passwordForm.newPassword}
+                      onChange={e => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '24px' }}>
+                    <label className="form-label">Confirm New Password</label>
+                    <input
+                      className="form-input"
+                      type="password"
+                      placeholder="Re-type new password"
+                      value={passwordForm.confirmPassword}
+                      onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-primary" disabled={updatingPassword} style={{ width: '100%', justifyContent: 'center' }}>
+                    {updatingPassword ? 'Updating Password…' : 'Change Password'}
+                  </button>
+                </form>
+              </div>
+
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Drama Modal - Positioned outside container for fixed positioning to work in transformed layouts */}
       {dramaModalOpen && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal-box modal-lg">
@@ -842,9 +980,9 @@ export default function Admin({ onNavigate }) {
                   id="f-title"
                   value={dramaForm.title}
                   onChange={e => setDramaForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Drama title"
+                  placeholder="e.g. My Secret Love"
                   required
-                  maxLength="120"
+                  maxLength="100"
                 />
               </div>
               <div className="form-group">
@@ -937,7 +1075,7 @@ export default function Admin({ onNavigate }) {
         </div>
       )}
 
-      {/* Episode Modal */}
+      {/* Episode Modal - Positioned outside container for fixed positioning to work in transformed layouts */}
       {episodeModalOpen && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal-box">
@@ -986,6 +1124,6 @@ export default function Admin({ onNavigate }) {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

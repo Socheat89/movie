@@ -1345,3 +1345,7 @@ input, textarea, select { font-family: var(--font); }
   .hero-title   { font-size: 1.6rem; }
   .admin-stats  { grid-template-columns: repeat(2, 1fr); }
 }
+
+.dropdown-action-btn:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
