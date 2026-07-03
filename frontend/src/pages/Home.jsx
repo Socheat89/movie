@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { API } from '../api';
 import { updateSeo } from '../seo';
+import { PlayIcon, HeartIcon, SearchIcon, CloseIcon } from '../components/AnimatedIcons';
 
-export default function Home({ onNavigate }) {
+export default function Home({ onNavigate, initialSection }) {
   const [dramas, setDramas] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +14,9 @@ export default function Home({ onNavigate }) {
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Search Input Ref
+  const searchInputRef = useRef(null);
+
   // Favorites Local State
   const [favorites, setFavorites] = useState(() => {
     try {
@@ -22,6 +26,15 @@ export default function Home({ onNavigate }) {
       return [];
     }
   });
+
+  const showOnlyFavorites = initialSection === 'favorites';
+  const showOnlySearch = initialSection === 'search';
+
+  useEffect(() => {
+    if (showOnlySearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showOnlySearch]);
 
   useEffect(() => {
     async function loadData() {
@@ -144,6 +157,229 @@ export default function Home({ onNavigate }) {
     );
   }
 
+  // --- MOBILE ONLY SECTIONS ---
+
+  // 1. Favorites tab view on Mobile
+  if (showOnlyFavorites) {
+    return (
+      <div className="page-enter">
+        <section className="content-section" style={{ paddingTop: '10px' }}>
+          <div className="section-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 className="section-title">My <span>Favorites</span></h2>
+            <span style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>{favorites.length} saved</span>
+          </div>
+
+          {favorites.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', textAlign: 'center', padding: '40px 20px' }}>
+              <div style={{ position: 'relative', marginBottom: '20px' }}>
+                <HeartIcon active={true} size={54} />
+              </div>
+              <h3 style={{ fontWeight: 700, marginBottom: '10px', fontSize: '1.25rem' }}>Your list is empty</h3>
+              <p style={{ color: 'var(--text-2)', fontSize: '0.9rem', maxWidth: '320px', marginBottom: '28px', lineHeight: 1.6 }}>
+                Save dramas to this list by tapping the heart icon on any movie poster.
+              </p>
+              <button className="btn btn-primary" style={{ padding: '12px 28px' }} onClick={() => onNavigate('/')}>Discover Dramas</button>
+            </div>
+          ) : (
+            <div className="dramas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: '16px' }}>
+              {dramas.filter(d => favorites.includes(d.id)).map((d) => (
+                <article
+                  key={d.id}
+                  className="drama-card"
+                  onClick={() => onNavigate(`/watch/${d.id}`)}
+                  role="button"
+                  tabIndex="0"
+                  style={{ cursor: 'pointer', background: 'transparent' }}
+                >
+                  <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', aspectRatio: '2/3', marginBottom: '12px', border: '1px solid var(--border)' }}>
+                    <img
+                      className="drama-card-poster loaded"
+                      src={d.poster}
+                      alt={d.title}
+                      loading="lazy"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.target.src = `https://picsum.photos/seed/${d.id}/300/450`;
+                      }}
+                    />
+                    <button
+                      onClick={(e) => toggleFavorite(d.id, e)}
+                      style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        zIndex: 3,
+                        background: 'rgba(8, 8, 14, 0.65)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '50%',
+                        width: '36px',
+                        height: '36px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s ease'
+                      }}
+                      className="fav-heart-btn"
+                    >
+                      <HeartIcon active={true} size={18} />
+                    </button>
+                    <div className="drama-card-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
+                      <PlayIcon size={40} />
+                    </div>
+                  </div>
+                  <div className="drama-card-info" style={{ padding: '0 4px' }}>
+                    <h3 className="drama-card-title" style={{ fontSize: '0.92rem', fontWeight: 600, marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text)' }}>
+                      {d.title}
+                    </h3>
+                    <div className="drama-card-meta" style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.76rem', color: 'var(--text-2)' }}>
+                      <span>{d.year || '2025'}</span>
+                      <span>·</span>
+                      <span style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</span>
+                      <span>·</span>
+                      <span style={{ color: 'var(--text-3)' }}>{d.episodeCount || 0} EPs</span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    );
+  }
+
+  // 2. Search tab view on Mobile
+  if (showOnlySearch) {
+    return (
+      <div className="page-enter">
+        <section className="content-section" style={{ paddingTop: '10px' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <h2 className="section-title" style={{ marginBottom: '16px' }}>Search <span>Dramas</span></h2>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '100px', padding: '8px 20px', width: '100%' }}>
+              <SearchIcon active={true} size={20} style={{ marginRight: '8px', flexShrink: 0 }} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search title, genre, or year..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text)',
+                  outline: 'none',
+                  fontSize: '0.94rem',
+                  width: '100%',
+                  margin: 0,
+                  padding: '6px 0'
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  style={{ color: 'var(--text-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: '4px', flexShrink: 0 }}
+                >
+                  <CloseIcon size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Genre Filters */}
+          <div className="genre-filters" role="group" aria-label="Filter by genre" style={{ marginBottom: '24px' }}>
+            {['All', ...categories].map((cat) => (
+              <button
+                key={cat}
+                className={`genre-pill ${selectedGenre === cat ? 'active' : ''}`}
+                onClick={() => setSelectedGenre(cat)}
+                aria-selected={selectedGenre === cat}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Search Results */}
+          <div className="dramas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: '16px' }}>
+            {filteredDramas.length === 0 ? (
+              <div className="no-results" style={{ gridColumn: '1/-1', padding: '60px 20px', textAlign: 'center' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '16px', opacity: 0.35 }}>🔍</div>
+                <h3 style={{ fontWeight: 700, marginBottom: '8px' }}>No matches found</h3>
+                <p style={{ color: 'var(--text-2)', fontSize: '0.88rem' }}>Try refining your keywords or choosing another category.</p>
+              </div>
+            ) : (
+              filteredDramas.map((d) => (
+                <article
+                  key={d.id}
+                  className="drama-card"
+                  onClick={() => onNavigate(`/watch/${d.id}`)}
+                  role="button"
+                  tabIndex="0"
+                  style={{ cursor: 'pointer', background: 'transparent' }}
+                >
+                  <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', aspectRatio: '2/3', marginBottom: '12px', border: '1px solid var(--border)' }}>
+                    <img
+                      className="drama-card-poster loaded"
+                      src={d.poster}
+                      alt={d.title}
+                      loading="lazy"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.target.src = `https://picsum.photos/seed/${d.id}/300/450`;
+                      }}
+                    />
+                    <button
+                      onClick={(e) => toggleFavorite(d.id, e)}
+                      style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        zIndex: 3,
+                        background: 'rgba(8, 8, 14, 0.65)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '50%',
+                        width: '36px',
+                        height: '36px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s ease'
+                      }}
+                      className="fav-heart-btn"
+                    >
+                      <HeartIcon active={favorites.includes(d.id)} size={18} />
+                    </button>
+                    <div className="drama-card-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
+                      <PlayIcon size={40} />
+                    </div>
+                  </div>
+                  <div className="drama-card-info" style={{ padding: '0 4px' }}>
+                    <h3 className="drama-card-title" style={{ fontSize: '0.92rem', fontWeight: 600, marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text)' }}>
+                      {d.title}
+                    </h3>
+                    <div className="drama-card-meta" style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.76rem', color: 'var(--text-2)' }}>
+                      <span>{d.year || '2025'}</span>
+                      <span>·</span>
+                      <span style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</span>
+                      <span>·</span>
+                      <span style={{ color: 'var(--text-3)' }}>{d.episodeCount || 0} EPs</span>
+                    </div>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  // --- REGULAR DESKTOP & HYBRID LAYOUT ---
+
   const sliderItems = trending.slice(0, 6);
 
   return (
@@ -168,8 +404,8 @@ export default function Home({ onNavigate }) {
                 <h1 className="hero-title">{d.title}</h1>
                 <p className="hero-desc">{d.description || 'No description available.'}</p>
                 <div className="hero-actions">
-                  <button className="btn btn-primary" onClick={() => onNavigate(`/watch/${d.id}`)}>
-                    ▶ Watch Now
+                  <button className="btn btn-primary" onClick={() => onNavigate(`/watch/${d.id}`)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <PlayIcon size={20} /> Watch Now
                   </button>
                   <div className="hero-meta" style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '0.88rem' }}>
                     <span className="genre-badge">{d.genre}</span>
@@ -256,15 +492,16 @@ export default function Home({ onNavigate }) {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: '#ff4b4b',
-                      fontSize: '1rem',
                       cursor: 'pointer',
                       transition: 'transform 0.2s ease'
                     }}
                     className="fav-heart-btn"
                   >
-                    ❤️
+                    <HeartIcon active={true} size={18} />
                   </button>
+                  <div className="drama-card-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
+                    <PlayIcon size={44} />
+                  </div>
                 </div>
                 <div className="drama-card-info" style={{ padding: '0 4px' }}>
                   <h3 className="drama-card-title" style={{ fontSize: '0.96rem', fontWeight: 600, marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text)' }}>
@@ -293,7 +530,7 @@ export default function Home({ onNavigate }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '100px', padding: '6px 18px', width: '100%', maxWidth: '380px' }}>
-            <span style={{ color: 'var(--text-2)', fontSize: '0.95rem', marginRight: '8px' }}>🔍</span>
+            <SearchIcon active={false} size={16} style={{ marginRight: '8px', color: 'var(--text-2)' }} />
             <input
               type="text"
               placeholder="Search title, genre, or year..."
@@ -313,9 +550,9 @@ export default function Home({ onNavigate }) {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                style={{ color: 'var(--text-3)', fontSize: '0.85rem', cursor: 'pointer', padding: '0 4px', fontWeight: 'bold' }}
+                style={{ color: 'var(--text-3)', display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '0 4px' }}
               >
-                ✕
+                <CloseIcon size={14} />
               </button>
             )}
           </div>
@@ -388,28 +625,17 @@ export default function Home({ onNavigate }) {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: favorites.includes(d.id) ? '#ff4b4b' : 'var(--text-2)',
-                      fontSize: '1rem',
                       cursor: 'pointer',
                       transition: 'transform 0.2s ease, color 0.2s ease'
                     }}
                     className="fav-heart-btn"
                     title={favorites.includes(d.id) ? "Remove from Favorites" : "Add to Favorites"}
                   >
-                    {favorites.includes(d.id) ? '❤️' : '🤍'}
+                    <HeartIcon active={favorites.includes(d.id)} size={18} />
                   </button>
 
                   <div className="drama-card-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
-                    <button
-                      className="overlay-watch-btn"
-                      style={{ background: 'var(--accent)', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '100px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onNavigate(`/watch/${d.id}`);
-                      }}
-                    >
-                      ▶ Play
-                    </button>
+                    <PlayIcon size={44} />
                   </div>
                 </div>
                 <div className="drama-card-info" style={{ padding: '0 4px' }}>
@@ -429,8 +655,8 @@ export default function Home({ onNavigate }) {
               </article>
             ))
           )}
-          </div>
-        </section>
-      </div>
-    );
-  }
+        </div>
+      </section>
+    </div>
+  );
+}

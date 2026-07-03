@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { API } from '../api';
 import { Embed } from '../embed';
+import { BackIcon, CloseIcon, AdminIcon, CheckIcon, InfoIcon, ErrorIcon, LogoIcon, PlayIcon, EditIcon, TrashIcon, PlusIcon, TagIcon } from '../components/AnimatedIcons';
 
 export default function Admin({ onNavigate }) {
   const [authed, setAuthed] = useState(API.isAuthed());
@@ -438,10 +439,17 @@ export default function Admin({ onNavigate }) {
   if (!authed) {
     return (
       <div className="login-container page-enter">
-        {toast.show && <div className={`toast ${toast.type} show`}>{toast.message}</div>}
+        {toast.show && (
+          <div className={`toast ${toast.type} show`} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {toast.type === 'success' && <CheckIcon size={20} />}
+            {toast.type === 'info' && <InfoIcon size={20} />}
+            {toast.type === 'error' && <ErrorIcon size={20} />}
+            <span>{toast.message}</span>
+          </div>
+        )}
         <div className="login-card">
-          <div className="login-icon">🔐</div>
-          <h1 className="login-title">Admin Panel</h1>
+          <div className="login-icon"><AdminIcon size={48} active={checking} /></div>
+          <h1 className="login-title" style={{ marginTop: '12px' }}>Admin Panel</h1>
           <p className="login-subtitle">Enter your admin password to manage content</p>
 
           <form onSubmit={handleLogin} novalidate>
@@ -457,8 +465,8 @@ export default function Admin({ onNavigate }) {
                 required
               />
             </div>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '4px' }} disabled={checking}>
-              {checking ? 'Checking…' : 'Unlock Dashboard →'}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '4px', display: 'inline-flex', alignItems: 'center', gap: '8px' }} disabled={checking}>
+              {checking ? 'Checking…' : 'Unlock Dashboard'} {!checking && <BackIcon size={16} style={{ transform: 'rotate(180deg)', display: 'inline-block' }} />}
             </button>
           </form>
         </div>
@@ -473,7 +481,14 @@ export default function Admin({ onNavigate }) {
   return (
     <>
       <div className="admin-layout page-enter" style={{ padding: '24px 64px' }}>
-        {toast.show && <div className={`toast ${toast.type} show`}>{toast.message}</div>}
+        {toast.show && (
+          <div className={`toast ${toast.type} show`} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {toast.type === 'success' && <CheckIcon size={20} />}
+            {toast.type === 'info' && <InfoIcon size={20} />}
+            {toast.type === 'error' && <ErrorIcon size={20} />}
+            <span>{toast.message}</span>
+          </div>
+        )}
 
         {/* Header */}
         <div className="admin-header" style={{ marginBottom: '32px' }}>
@@ -482,7 +497,9 @@ export default function Admin({ onNavigate }) {
               <h1 className="admin-title" style={{ fontSize: '2.2rem', fontWeight: 800 }}>Admin Dashboard</h1>
               <p className="admin-subtitle">Manage DramaStream content — dramas, episodes, categories, and payment settings</p>
             </div>
-            <button className="btn btn-ghost btn-sm" onClick={handleLogout} style={{ borderRadius: 'var(--r-sm)' }}>← Logout</button>
+            <button className="btn btn-ghost btn-sm" onClick={handleLogout} style={{ borderRadius: 'var(--r-sm)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <BackIcon size={14} /> Logout
+            </button>
           </div>
         </div>
 
@@ -509,16 +526,16 @@ export default function Admin({ onNavigate }) {
         {/* Tabs */}
         <div className="admin-tabs" role="tablist" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '1px', marginBottom: '28px' }}>
           <button className={`admin-tab ${activeTab === 'dramas' ? 'active' : ''}`} onClick={() => setActiveTab('dramas')}>
-            🎬 Dramas
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><LogoIcon size={14} /> Dramas</span>
           </button>
           <button className={`admin-tab ${activeTab === 'episodes' ? 'active' : ''}`} onClick={() => setActiveTab('episodes')}>
-            ▶ Episodes
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><PlayIcon size={14} /> Episodes</span>
           </button>
           <button className={`admin-tab ${activeTab === 'categories' ? 'active' : ''}`} onClick={() => setActiveTab('categories')}>
-            🏷️ Categories
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><TagIcon size={14} /> Categories</span>
           </button>
           <button className={`admin-tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-            ⚙️ Settings &amp; Profile
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><AdminIcon active={activeTab === 'settings'} size={14} /> Settings</span>
           </button>
         </div>
 
@@ -545,16 +562,19 @@ export default function Admin({ onNavigate }) {
                   onChange={e => setImportUrl(e.target.value)}
                   style={{ margin: 0, flex: 1 }}
                 />
-                <button className="btn btn-ghost" onClick={handleScrape} disabled={scraping}>
-                  {scraping ? '⚡ Fetching…' : '⚡ Fetch & Import'}
+                <button className="btn btn-ghost" onClick={handleScrape} disabled={scraping} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <AdminIcon active={scraping} size={14} />
+                  {scraping ? 'Fetching…' : 'Fetch & Import'}
                 </button>
               </div>
 
               <button className="btn btn-ghost" onClick={() => document.getElementById('json-upload').click()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                📂 Upload JSON
+                <ShareIcon size={14} style={{ transform: 'rotate(90deg)' }} /> Upload JSON
               </button>
               <input type="file" id="json-upload" accept=".json" onChange={handleJsonUpload} style={{ display: 'none' }} />
-              <button className="btn btn-primary" onClick={() => openDramaModal(null)}>+ Add Drama</button>
+              <button className="btn btn-primary" onClick={() => openDramaModal(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <PlusIcon size={14} /> Add Drama
+              </button>
             </div>
 
             {/* Fetch & Import Progress Bar */}
@@ -665,7 +685,7 @@ export default function Admin({ onNavigate }) {
                                   }}
                                   className="dropdown-action-btn"
                                 >
-                                  ✏️ Edit Drama
+                                  <EditIcon size={14} /> Edit Drama
                                 </button>
                                 <button
                                   style={{
@@ -685,7 +705,7 @@ export default function Admin({ onNavigate }) {
                                   }}
                                   className="dropdown-action-btn"
                                 >
-                                  👁️ View on Site
+                                  <PlayIcon size={14} /> View on Site
                                 </button>
                                 <button
                                   style={{
@@ -706,7 +726,7 @@ export default function Admin({ onNavigate }) {
                                   }}
                                   className="dropdown-action-btn"
                                 >
-                                  🗑️ Delete
+                                  <TrashIcon size={14} /> Delete
                                 </button>
                               </div>
                             </>
@@ -743,7 +763,9 @@ export default function Admin({ onNavigate }) {
                       <option key={d.id} value={d.id}>{d.title}</option>
                     ))}
                   </select>
-                  <button className="btn btn-primary" onClick={() => openEpisodeModal(null)}>+ Add Episode</button>
+                  <button className="btn btn-primary" onClick={() => openEpisodeModal(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <PlusIcon size={14} /> Add Episode
+                  </button>
                 </div>
 
                 {loadingEpisodes ? (
@@ -784,8 +806,12 @@ export default function Admin({ onNavigate }) {
                               </td>
                               <td>
                                 <div className="table-actions">
-                                  <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openEpisodeModal(ep)} title="Edit">✏️</button>
-                                  <button className="btn btn-ghost btn-sm btn-icon" onClick={() => deleteEpisode(ep.id, ep.title)} title="Delete" style={{ color: 'var(--red)' }}>🗑️</button>
+                                  <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openEpisodeModal(ep)} title="Edit" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <EditIcon size={14} />
+                                  </button>
+                                  <button className="btn btn-ghost btn-sm btn-icon" onClick={() => deleteEpisode(ep.id, ep.title)} title="Delete" style={{ color: 'var(--red)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <TrashIcon size={14} />
+                                  </button>
                                 </div>
                               </td>
                             </tr>
@@ -818,7 +844,9 @@ export default function Admin({ onNavigate }) {
                   onKeyDown={e => { if (e.key === 'Enter') handleAddCategory(); }}
                   style={{ margin: 0 }}
                 />
-                <button className="btn btn-primary" onClick={handleAddCategory}>Add</button>
+                <button className="btn btn-primary" onClick={handleAddCategory} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <PlusIcon size={14} /> Add
+                </button>
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', minHeight: '80px', padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border)', borderRadius: 'var(--r)', marginBottom: '32px' }}>
@@ -844,18 +872,19 @@ export default function Admin({ onNavigate }) {
                       {cat}
                       <button
                         onClick={() => handleDeleteCategory(cat)}
-                        style={{ color: 'var(--red)', fontSize: '1rem', fontWeight: 'bold', padding: '0 2px' }}
+                        style={{ color: 'var(--red)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px', cursor: 'pointer' }}
                         title="Remove"
                       >
-                        ✕
+                        <CloseIcon size={12} />
                       </button>
                     </span>
                   ))
                 )}
               </div>
 
-              <button className="btn btn-primary" onClick={handleSaveCategories} disabled={savingCategories} style={{ gap: '8px' }}>
-                {savingCategories ? 'Saving…' : '💾 Save Categories'}
+              <button className="btn btn-primary" onClick={handleSaveCategories} disabled={savingCategories} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <CheckIcon size={14} />
+                {savingCategories ? 'Saving…' : 'Save Categories'}
               </button>
             </div>
           </div>
@@ -905,8 +934,9 @@ export default function Admin({ onNavigate }) {
                     </div>
                   )}
 
-                  <button type="submit" className="btn btn-primary" disabled={savingSponsorQr} style={{ width: '100%', justifyContent: 'center' }}>
-                    {savingSponsorQr ? 'Saving…' : '💾 Save QR Code'}
+                  <button type="submit" className="btn btn-primary" disabled={savingSponsorQr} style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <CheckIcon size={14} />
+                    {savingSponsorQr ? 'Saving…' : 'Save QR Code'}
                   </button>
                 </form>
               </div>
@@ -952,7 +982,8 @@ export default function Admin({ onNavigate }) {
                       required
                     />
                   </div>
-                  <button type="submit" className="btn btn-primary" disabled={updatingPassword} style={{ width: '100%', justifyContent: 'center' }}>
+                  <button type="submit" className="btn btn-primary" disabled={updatingPassword} style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <CheckIcon size={14} />
                     {updatingPassword ? 'Updating Password…' : 'Change Password'}
                   </button>
                 </form>

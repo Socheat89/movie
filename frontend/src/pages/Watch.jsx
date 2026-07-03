@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { API } from '../api';
 import { Embed } from '../embed';
 import { updateSeo } from '../seo';
+import { BackIcon, HeartIcon, ShareIcon, StarIcon, PlayIcon, CloseIcon } from '../components/AnimatedIcons';
 
 /* ─── local star-rating & comment store ─── */
 const getStoredRating = (id) => {
@@ -178,8 +179,8 @@ export default function Watch({ dramaId, onNavigate }) {
   const renderPlayer = (url) => {
     if (!url) return (
       <div className="player-no-video">
-        <div className="nvid-icon">▶</div>
-        <p>No video selected</p>
+        <PlayIcon size={48} style={{ color: 'var(--text-3)' }} />
+        <p style={{ marginTop: '12px' }}>No video selected</p>
         <small>Select an episode to start watching.</small>
       </div>
     );
@@ -206,8 +207,8 @@ export default function Watch({ dramaId, onNavigate }) {
             Facebook videos cannot be embedded directly.<br />Click below to watch on Facebook.
           </small>
           <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-primary"
-            style={{ marginTop: 4, fontSize: '0.95rem', padding: '13px 28px' }}>
-            ▶ Watch on Facebook
+            style={{ marginTop: 4, fontSize: '0.95rem', padding: '13px 28px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <PlayIcon size={20} /> Watch on Facebook
           </a>
         </div>
       );
@@ -243,17 +244,32 @@ export default function Watch({ dramaId, onNavigate }) {
       <div style={{ fontSize: '4rem', opacity: 0.25, marginBottom: 20 }}>🎬</div>
       <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: 8 }}>Drama Not Found</h2>
       <p style={{ color: 'var(--text-2)', fontSize: '0.9rem', marginBottom: 28 }}>This drama doesn't exist or may have been removed.</p>
-      <button className="btn btn-primary" onClick={() => onNavigate('/')}>← Back to Home</button>
+      <button className="btn btn-primary" onClick={() => onNavigate('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+        <BackIcon size={16} /> Back to Home
+      </button>
     </div>
   );
 
   const episodes = drama.episodes || [];
 
   return (
-    <div className="page-enter" style={{ maxWidth: 1400, margin: '0 auto', padding: '28px 28px 96px' }}>
+    <div className="page-enter" style={{ maxWidth: 1400, margin: '0 auto', padding: '20px 28px 96px' }}>
+      
+      {/* Back to Browse Top Link */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <button
+          onClick={() => onNavigate('/')}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', color: 'var(--text)', transition: 'all 0.2s ease' }}
+          title="Back to Home"
+          className="back-circle-btn"
+        >
+          <BackIcon size={20} />
+        </button>
+        <span style={{ fontSize: '0.86rem', color: 'var(--text-2)', fontWeight: 500 }}>Back to Browse</span>
+      </div>
 
       {/* ── Main 2-column grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 310px', gap: 28, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 310px', gap: 28, alignItems: 'start' }} className="watch-layout">
 
         {/* ══ LEFT: Video + Info ══ */}
         <div>
@@ -282,36 +298,30 @@ export default function Watch({ dramaId, onNavigate }) {
                 display: 'inline-flex', alignItems: 'center', gap: 7,
                 background: isFavorite ? 'rgba(255,75,75,0.12)' : 'var(--bg-card)',
                 border: `1px solid ${isFavorite ? 'rgba(255,75,75,0.5)' : 'var(--border)'}`,
-                borderRadius: 100, padding: '8px 16px', fontSize: '0.82rem',
+                borderRadius: 100, padding: '8px 18px', fontSize: '0.82rem',
                 color: isFavorite ? '#ff4b4b' : 'var(--text-2)', fontWeight: 600, cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}>
-                {isFavorite ? '❤️ Saved' : '🤍 Save'}
+                <HeartIcon active={isFavorite} size={15} />
+                {isFavorite ? 'Saved' : 'Save'}
               </button>
 
               <div style={{ position: 'relative' }}>
                 <button onClick={handleShare} style={{
                   display: 'inline-flex', alignItems: 'center', gap: 7,
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
-                  borderRadius: 100, padding: '8px 16px', fontSize: '0.82rem',
+                  borderRadius: 100, padding: '8px 18px', fontSize: '0.82rem',
                   color: 'var(--text-2)', fontWeight: 600, cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}>
-                  🔗 Share
+                  <ShareIcon copied={shareToast} size={15} />
+                  {shareToast ? 'Copied!' : 'Share'}
                 </button>
-                {shareToast && (
-                  <span style={{
-                    position: 'absolute', bottom: '110%', left: '50%', transform: 'translateX(-50%)',
-                    background: 'var(--accent)', color: '#fff', fontSize: '0.78rem', fontWeight: 600,
-                    padding: '5px 12px', borderRadius: 100, whiteSpace: 'nowrap',
-                    boxShadow: '0 4px 16px var(--accent-glow)', animation: 'fadeIn 0.2s ease'
-                  }}>
-                    ✓ Link copied!
-                  </span>
-                )}
               </div>
 
-              <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('/')}>← Home</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <BackIcon size={14} /> Home
+              </button>
             </div>
           </div>
 
@@ -333,13 +343,10 @@ export default function Watch({ dramaId, onNavigate }) {
                   onMouseLeave={() => setHoverRating(0)}
                   onClick={() => submitRating(star)}
                   style={{
-                    background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px',
-                    fontSize: '1.7rem', lineHeight: 1,
-                    color: (hoverRating || userRating) >= star ? '#ffb800' : 'var(--bg-3)',
-                    transition: 'color 0.15s ease, transform 0.1s ease',
-                    transform: (hoverRating || userRating) >= star ? 'scale(1.2)' : 'scale(1)'
+                    background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
+                    transition: 'all 0.2s ease'
                   }}>
-                  ★
+                  <StarIcon active={userRating >= star} hover={hoverRating >= star} size={28} />
                 </button>
               ))}
               <span style={{ marginLeft: 10, fontSize: '0.85rem', color: 'var(--text-2)' }}>
@@ -425,7 +432,7 @@ export default function Watch({ dramaId, onNavigate }) {
         </div>
 
         {/* ══ RIGHT: Sidebar ══ */}
-        <div style={{ position: 'sticky', top: 'calc(var(--nav-h) + 16px)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ position: 'sticky', top: 'calc(var(--nav-h) + 16px)', display: 'flex', flexDirection: 'column', gap: 16 }} className="episode-column">
 
           {/* Sidebar Tabs */}
           <div style={{
@@ -451,7 +458,7 @@ export default function Watch({ dramaId, onNavigate }) {
             <div style={{
               background: 'var(--bg-card)', border: '1px solid var(--border)',
               borderRadius: 'var(--r-lg)', padding: '16px'
-            }}>
+            }} className="episode-list-box">
               {episodes.length === 0 ? (
                 <p style={{ textAlign: 'center', color: 'var(--text-3)', fontSize: '0.85rem', padding: '20px 0' }}>
                   No episodes available yet.
@@ -489,9 +496,10 @@ export default function Watch({ dramaId, onNavigate }) {
                           style={{
                             flex: 1, padding: '9px', fontSize: '0.82rem', fontWeight: 600,
                             background: 'var(--bg-2)', color: idx <= 0 ? 'var(--text-3)' : 'var(--text)',
-                            border: '1px solid var(--border)', borderRadius: 'var(--r)', cursor: idx <= 0 ? 'not-allowed' : 'pointer'
+                            border: '1px solid var(--border)', borderRadius: 'var(--r)', cursor: idx <= 0 ? 'not-allowed' : 'pointer',
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px'
                           }}>
-                          ← Prev
+                          <BackIcon size={12} /> Prev
                         </button>
                         <button
                           disabled={idx >= episodes.length - 1}
@@ -501,9 +509,10 @@ export default function Watch({ dramaId, onNavigate }) {
                             background: idx >= episodes.length - 1 ? 'var(--bg-2)' : 'var(--accent)',
                             color: idx >= episodes.length - 1 ? 'var(--text-3)' : '#fff',
                             border: '1px solid var(--border)', borderRadius: 'var(--r)', cursor: idx >= episodes.length - 1 ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.2s ease'
+                            transition: 'all 0.2s ease',
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px'
                           }}>
-                          Next →
+                          Next <BackIcon size={12} style={{ transform: 'rotate(180deg)' }} />
                         </button>
                       </div>
                     );
@@ -565,6 +574,9 @@ export default function Watch({ dramaId, onNavigate }) {
                   <img className="drama-card-poster loaded" src={d.poster} alt={d.title} loading="lazy"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={(e) => { e.target.src = `https://picsum.photos/seed/${d.id}/300/450`; }} />
+                  <div className="drama-card-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
+                    <PlayIcon size={38} />
+                  </div>
                 </div>
                 <div style={{ padding: '0 4px' }}>
                   <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text)' }}>

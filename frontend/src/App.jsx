@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Home from './pages/Home';
 import Watch from './pages/Watch';
 import Admin from './pages/Admin';
+import { LogoIcon, HomeIcon, SearchIcon, HeartIcon, AdminIcon } from './components/AnimatedIcons';
 
 function App() {
   const [hash, setHash] = useState(window.location.hash || '#/');
@@ -30,6 +31,10 @@ function App() {
   let currentPage = null;
   if (page === '' || page === 'home') {
     currentPage = <Home onNavigate={navigate} />;
+  } else if (page === 'search') {
+    currentPage = <Home onNavigate={navigate} initialSection="search" />;
+  } else if (page === 'favorites') {
+    currentPage = <Home onNavigate={navigate} initialSection="favorites" />;
   } else if (page === 'watch') {
     currentPage = <Watch dramaId={parts[1]} onNavigate={navigate} />;
   } else if (page === 'admin') {
@@ -38,8 +43,7 @@ function App() {
     currentPage = <Home onNavigate={navigate} />;
   }
 
-  const isHomeActive = page === '' || page === 'home';
-  const isAdminActive = page === 'admin';
+  const isHomeActive = page === '' || page === 'home' || page === 'search' || page === 'favorites';
 
   return (
     <div id="app">
@@ -47,7 +51,7 @@ function App() {
       <nav id="navbar" role="navigation" aria-label="Main navigation">
         <div className="nav-inner">
           <a href="#/" className="nav-logo" aria-label="DramaStream Home">
-            <div className="logo-icon" aria-hidden="true">▶</div>
+            <LogoIcon size={30} style={{ marginRight: '6px' }} />
             <span>DramaStream</span>
           </a>
 
@@ -55,7 +59,7 @@ function App() {
           <div className={`nav-links ${mobileMenuOpen ? 'open' : ''}`} id="nav-links">
             <a
               href="#/"
-              className={`nav-link ${isHomeActive ? 'active' : ''}`}
+              className={`nav-link ${page === '' || page === 'home' ? 'active' : ''}`}
             >
               Home
             </a>
@@ -83,13 +87,41 @@ function App() {
         {currentPage}
       </main>
 
+      {/* Mobile Bottom Tab Navigation */}
+      <div className="mobile-bottom-nav" role="navigation" aria-label="Mobile Navigation">
+        <button
+          onClick={() => navigate('/')}
+          className={`mobile-nav-item ${page === '' || page === 'home' ? 'active' : ''}`}
+          aria-label="Home"
+        >
+          <HomeIcon active={page === '' || page === 'home'} size={22} />
+          <span className="mobile-nav-label">Home</span>
+        </button>
+
+        <button
+          onClick={() => navigate('/search')}
+          className={`mobile-nav-item ${page === 'search' ? 'active' : ''}`}
+          aria-label="Search"
+        >
+          <SearchIcon active={page === 'search'} size={22} />
+          <span className="mobile-nav-label">Search</span>
+        </button>
+
+        <button
+          onClick={() => navigate('/favorites')}
+          className={`mobile-nav-item ${page === 'favorites' ? 'active' : ''}`}
+          aria-label="Favorites"
+        >
+          <HeartIcon active={page === 'favorites'} size={20} />
+          <span className="mobile-nav-label">Favorites</span>
+        </button>
+      </div>
+
       {/* Footer */}
       <footer className="footer" role="contentinfo">
         <div className="footer-inner">
           <div className="footer-logo">
-            <div className="logo-icon" style={{ width: '26px', height: '26px', borderRadius: '7px', fontSize: '0.75rem' }} aria-hidden="true">
-              ▶
-            </div>
+            <LogoIcon size={24} style={{ marginRight: '6px' }} />
             DramaStream
           </div>
           <p className="footer-copy">© 2026 DramaStream. All drama content is user-managed via the admin panel.</p>
