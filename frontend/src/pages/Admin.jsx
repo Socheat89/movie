@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { API } from '../api';
 import { Embed } from '../embed';
-import { BackIcon, CloseIcon, AdminIcon, CheckIcon, InfoIcon, ErrorIcon, LogoIcon, PlayIcon, EditIcon, TrashIcon, PlusIcon, TagIcon } from '../components/AnimatedIcons';
+import { BackIcon, CloseIcon, AdminIcon, CheckIcon, InfoIcon, ErrorIcon, LogoIcon, PlayIcon, EditIcon, TrashIcon, PlusIcon, TagIcon, ShareIcon } from '../components/AnimatedIcons';
 
 export default function Admin({ onNavigate }) {
   const [authed, setAuthed] = useState(API.isAuthed());
