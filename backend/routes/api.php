@@ -24,6 +24,7 @@ Route::get('/dramas/{id}', [DramaController::class, 'show']);
 Route::post('/dramas', [DramaController::class, 'store']);
 Route::put('/dramas/{id}', [DramaController::class, 'update']);
 Route::delete('/dramas/{id}', [DramaController::class, 'destroy']);
+Route::post('/dramas/bulk-genre', [DramaController::class, 'bulkUpdateGenre']);
 
 Route::get('/dramas/{drama_id}/episodes', [EpisodeController::class, 'index']);
 Route::post('/dramas/{drama_id}/episodes', [EpisodeController::class, 'store']);

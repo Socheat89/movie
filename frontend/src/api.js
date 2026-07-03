@@ -121,10 +121,10 @@ export const API = {
     return _authed;
   },
 
-  async scrapeUrl(url, genre) {
+  async scrapeUrl(url) {
     return apiFetch('/api/admin/scrape', {
       method: 'POST',
-      body: JSON.stringify({ url, genre })
+      body: JSON.stringify({ url })
     });
   },
 
@@ -132,6 +132,13 @@ export const API = {
     return apiFetch('/api/categories', {
       method: 'POST',
       body: JSON.stringify({ categories })
+    });
+  },
+
+  async bulkUpdateGenre(genre, assignedIds) {
+    return apiFetch('/api/dramas/bulk-genre', {
+      method: 'POST',
+      body: JSON.stringify({ genre, assigned_ids: assignedIds })
     });
   },
 

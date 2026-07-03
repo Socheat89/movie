@@ -153,15 +153,35 @@ class DramaController extends Controller
         return response()->json(['deleted' => true]);
     }
 
+    public function bulkUpdateGenre(Request $request)
+    {
+        $data = $request->validate([
+            'genre' => 'required|string',
+            'assigned_ids' => 'present|array',
+            'assigned_ids.*' => 'string'
+        ]);
+
+        $genre = $data['genre'];
+        $assignedIds = $data['assigned_ids'];
+
+        // Update dramas previously in this genre but no longer selected to be empty
+        Drama::where('genre', $genre)->whereNotIn('id', $assignedIds)->update(['genre' => '']);
+
+        // Update selected dramas to be in this genre
+        if (!empty($assignedIds)) {
+            Drama::whereIn('id', $assignedIds)->update(['genre' => $genre]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
     public function scrape(Request $request)
     {
         $request->validate([
             'url' => 'required|url',
-            'genre' => 'nullable|string',
         ]);
 
         $url = $request->input('url');
-        $genre = $request->input('genre', 'Action');
 
         try {
             $imported = [];
@@ -223,7 +243,7 @@ class DramaController extends Controller
                                 }
 
                                 if ($title && $content) {
-                                    $res = $this->parseAndSaveDramaFromFeed($title, $content, $link, $poster, $genre);
+                                    $res = $this->parseAndSaveDramaFromFeed($title, $content, $link, $poster);
                                     if ($res) {
                                         $imported[] = $res;
                                     }
@@ -260,7 +280,7 @@ class DramaController extends Controller
             $html = $response->body();
 
             if ($isPostPage) {
-                $res = $this->parseAndSaveDrama($html, $url, $genre);
+                $res = $this->parseAndSaveDrama($html, $url);
                 if (!$res) {
                     return response()->json(['detail' => 'Could not find any episode videos on this page.'], 400);
                 }
@@ -299,7 +319,7 @@ class DramaController extends Controller
                             $year = !empty($yearMatch[1]) ? $yearMatch[1] : '2025';
 
                             if ($year === '2025' || $year === '2026') {
-                                $res = $this->parseAndSaveDrama($subHtml, $link, $genre);
+                                $res = $this->parseAndSaveDrama($subHtml, $link);
                                 if ($res) {
                                     $imported[] = $res;
                                     $count++;
@@ -327,7 +347,7 @@ class DramaController extends Controller
         }
     }
 
-    private function parseAndSaveDrama($html, $url, $genre = 'Action')
+    private function parseAndSaveDrama($html, $url)
     {
         // Extract title
         preg_match('/<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']*)["\']/i', $html, $titleMatch);
@@ -445,7 +465,7 @@ class DramaController extends Controller
             'titleKhmer' => '',
             'description' => $description,
             'poster' => $poster,
-            'genre' => $genre,
+            'genre' => 'Action',
             'trending' => true,
             'status' => '',
             'totalEpisodes' => count($episodes),
@@ -472,7 +492,7 @@ class DramaController extends Controller
         ];
     }
 
-    private function parseAndSaveDramaFromFeed($title, $contentHtml, $url, $feedPoster, $genre = 'Action')
+    private function parseAndSaveDramaFromFeed($title, $contentHtml, $url, $feedPoster)
     {
         $title = preg_replace('/\[\d+\.END\]/i', '', $title);
         $title = preg_replace('/\[\d+\.EP\]/i', '', $title);
@@ -591,7 +611,7 @@ class DramaController extends Controller
             'titleKhmer' => '',
             'description' => $description,
             'poster' => $poster,
-            'genre' => $genre,
+            'genre' => 'Action',
             'trending' => true,
             'status' => '',
             'totalEpisodes' => count($episodes),

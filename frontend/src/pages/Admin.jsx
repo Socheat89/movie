@@ -16,7 +16,6 @@ export default function Admin({ onNavigate }) {
 
   // Scraper State
   const [importUrl, setImportUrl] = useState('');
-  const [importGenre, setImportGenre] = useState('Action');
   const [scraping, setScraping] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState(0);
 
@@ -56,6 +55,45 @@ export default function Admin({ onNavigate }) {
   // Categories management state
   const [newCategoryName, setNewCategoryName] = useState('');
   const [savingCategories, setSavingCategories] = useState(false);
+  const [selectedCategoryForAssign, setSelectedCategoryForAssign] = useState('');
+  const [assignedDramaIds, setAssignedDramaIds] = useState([]);
+  const [categoryDramaSearchQuery, setCategoryDramaSearchQuery] = useState('');
+  const [savingAssignments, setSavingAssignments] = useState(false);
+
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategoryForAssign) {
+      setSelectedCategoryForAssign(categories[0]);
+    }
+  }, [categories]);
+
+  useEffect(() => {
+    if (selectedCategoryForAssign) {
+      const matchIds = dramas.filter(d => d.genre === selectedCategoryForAssign).map(d => d.id);
+      setAssignedDramaIds(matchIds);
+    } else {
+      setAssignedDramaIds([]);
+    }
+  }, [selectedCategoryForAssign, dramas]);
+
+  const handleToggleAssignedDrama = (dramaId) => {
+    setAssignedDramaIds(prev => 
+      prev.includes(dramaId) ? prev.filter(id => id !== dramaId) : [...prev, dramaId]
+    );
+  };
+
+  const handleSaveAssignments = async () => {
+    if (!selectedCategoryForAssign) return;
+    setSavingAssignments(true);
+    try {
+      await API.bulkUpdateGenre(selectedCategoryForAssign, assignedDramaIds);
+      showToast(`Successfully assigned dramas to "${selectedCategoryForAssign}"!`, 'success');
+      loadDashboardData();
+    } catch (err) {
+      showToast('Failed to save assignments: ' + (err.message || 'error'), 'error');
+    } finally {
+      setSavingAssignments(false);
+    }
+  };
 
   // Profile management state (change password)
   const [passwordForm, setPasswordForm] = useState({
@@ -156,7 +194,7 @@ export default function Admin({ onNavigate }) {
     }, 350);
 
     try {
-      const res = await API.scrapeUrl(importUrl, importGenre);
+      const res = await API.scrapeUrl(importUrl);
       clearInterval(interval);
       setScrapeProgress(100);
       if (res.isBulk) {
@@ -599,26 +637,15 @@ export default function Admin({ onNavigate }) {
               />
 
               {/* Import from URL Form */}
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 2, minWidth: '400px' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 2, minWidth: '300px' }}>
                 <input
                   className="form-input"
                   type="url"
                   placeholder="Paste KhmerKomsan movie URL..."
                   value={importUrl}
                   onChange={e => setImportUrl(e.target.value)}
-                  style={{ margin: 0, flex: 2 }}
+                  style={{ margin: 0, flex: 1 }}
                 />
-                <select
-                  className="form-input"
-                  value={importGenre}
-                  onChange={e => setImportGenre(e.target.value)}
-                  style={{ margin: 0, width: 'auto', background: 'var(--bg-3)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '6px 12px', cursor: 'pointer' }}
-                  title="Category to import to"
-                >
-                  {categories.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
                 <button className="btn btn-ghost" onClick={handleScrape} disabled={scraping} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <AdminIcon active={scraping} size={14} />
                   {scraping ? 'Fetching…' : 'Fetch & Import'}
@@ -961,12 +988,68 @@ export default function Admin({ onNavigate }) {
         )}
 
         {activeTab === 'categories' && (
-          <div id="admin-tab-body" className="page-enter">
-            <div style={{ maxWidth: '750px', background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
+          <div id="admin-tab-body" className="page-enter" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '30px', maxWidth: '1200px' }}>
+            {/* Column 1: Manage Categories List */}
+            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
               <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Manage Movie Categories</h2>
               <p style={{ color: 'var(--text-2)', fontSize: '0.85rem', marginBottom: '24px' }}>
                 Add, remove, and sort categories. Make sure to click <strong>Save Categories</strong> to apply changes to the website filters.
               </p>
+
+              {/* Quick Add from existing drama genres */}
+              {(() => {
+                const allGenres = [...new Set(dramas.map(d => d.genre).filter(Boolean))];
+                const suggestedGenres = allGenres.filter(g => !categories.includes(g));
+                if (suggestedGenres.length === 0 && allGenres.length === 0) return null;
+                return (
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-2)', fontWeight: 600 }}>
+                        📋 Quick Add from Dramas ({suggestedGenres.length} available)
+                      </span>
+                      {suggestedGenres.length > 1 && (
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => {
+                            setCategories([...categories, ...suggestedGenres]);
+                            showToast(`Added ${suggestedGenres.length} genres! Don't forget to Save.`, 'success');
+                          }}
+                          style={{ fontSize: '0.8rem', padding: '4px 12px' }}
+                        >
+                          + Add All ({suggestedGenres.length})
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {suggestedGenres.length === 0 ? (
+                        <span style={{ fontSize: '0.82rem', color: 'var(--text-3)', fontStyle: 'italic' }}>All drama genres are already added ✓</span>
+                      ) : (
+                        suggestedGenres.map(genre => (
+                          <button
+                            key={genre}
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => {
+                              setCategories([...categories, genre]);
+                              showToast(`Added "${genre}"`, 'success');
+                            }}
+                            style={{
+                              padding: '5px 14px',
+                              fontSize: '0.82rem',
+                              borderRadius: '100px',
+                              border: '1px dashed var(--accent)',
+                              color: 'var(--accent-lt)',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            + {genre}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
                 <input
@@ -1019,6 +1102,112 @@ export default function Admin({ onNavigate }) {
               <button className="btn btn-primary" onClick={handleSaveCategories} disabled={savingCategories} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                 <CheckIcon size={14} />
                 {savingCategories ? 'Saving…' : 'Save Categories'}
+              </button>
+            </div>
+
+            {/* Column 2: Bulk Assign Dramas to Categories */}
+            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px', display: 'flex', flexDirection: 'column' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Assign Dramas to Category</h2>
+              <p style={{ color: 'var(--text-2)', fontSize: '0.85rem', marginBottom: '24px' }}>
+                Select a category and easily assign or remove multiple dramas by checking their boxes.
+              </p>
+
+              <div className="form-group" style={{ marginBottom: '20px' }}>
+                <label className="form-label" htmlFor="assign-category-select">Select Target Category</label>
+                <select
+                  id="assign-category-select"
+                  className="form-input"
+                  value={selectedCategoryForAssign}
+                  onChange={e => setSelectedCategoryForAssign(e.target.value)}
+                  style={{ width: '100%' }}
+                >
+                  <option value="">-- Choose Category --</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <input
+                  className="search-input"
+                  type="search"
+                  placeholder="🔍 Search dramas to assign..."
+                  value={categoryDramaSearchQuery}
+                  onChange={e => setCategoryDramaSearchQuery(e.target.value)}
+                  style={{ width: '100%', margin: 0 }}
+                />
+              </div>
+
+              <div style={{ 
+                flex: 1, 
+                minHeight: '260px', 
+                maxHeight: '380px', 
+                overflowY: 'auto', 
+                border: '1px solid var(--border)', 
+                borderRadius: 'var(--r-sm)', 
+                background: 'rgba(0,0,0,0.15)',
+                padding: '10px',
+                marginBottom: '24px'
+              }}>
+                {(() => {
+                  const filtered = dramas.filter(d => 
+                    d.title.toLowerCase().includes(categoryDramaSearchQuery.toLowerCase())
+                  );
+                  if (filtered.length === 0) {
+                    return <div style={{ color: 'var(--text-3)', fontSize: '0.9rem', textAlign: 'center', padding: '40px 0' }}>No dramas found.</div>;
+                  }
+                  return filtered.map(d => {
+                    const isAssigned = assignedDramaIds.includes(d.id);
+                    return (
+                      <div 
+                        key={d.id} 
+                        onClick={() => handleToggleAssignedDrama(d.id)}
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '12px', 
+                          padding: '8px 10px', 
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          background: isAssigned ? 'rgba(255,255,255,0.03)' : 'transparent',
+                          borderBottom: '1px solid rgba(255,255,255,0.02)',
+                          transition: 'background 0.2s ease'
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isAssigned}
+                          onChange={() => {}} // handled by parent onClick
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent)' }}
+                        />
+                        <img 
+                          src={d.poster} 
+                          alt="" 
+                          style={{ width: '32px', height: '44px', objectFit: 'cover', borderRadius: '4px', background: 'var(--bg-3)' }}
+                          onError={e => { e.target.style.display = 'none'; }}
+                        />
+                        <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: 500, color: isAssigned ? 'var(--text)' : 'var(--text-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {d.title}
+                          {d.genre && d.genre !== selectedCategoryForAssign && (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginLeft: '8px', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                              current: {d.genre}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+
+              <button 
+                className="btn btn-primary" 
+                onClick={handleSaveAssignments} 
+                disabled={savingAssignments || !selectedCategoryForAssign}
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                <CheckIcon size={14} /> {savingAssignments ? 'Saving Assignments...' : 'Save Assignments'}
               </button>
             </div>
           </div>
