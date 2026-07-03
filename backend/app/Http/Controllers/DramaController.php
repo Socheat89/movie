@@ -341,11 +341,17 @@ class DramaController extends Controller
         $poster = !empty($posterMatch[1]) ? $posterMatch[1] : 'https://picsum.photos/300/450';
 
         // Extract episodes
+        $episodes = [];
+
         // Format 1: const videos = [...]
         preg_match('/const\s+videos\s*=\s*(\[[\s\S]*?\]);/', $html, $videosMatch);
-        $episodes = [];
         if (!empty($videosMatch[1])) {
             $videoArrayStr = $videosMatch[1];
+            // Unescape
+            $videoArrayStr = str_replace(['\"', "\'", '\/'], ['"', "'", '/'], $videoArrayStr);
+            // Strip subtitles
+            $videoArrayStr = preg_replace('/subtitles\s*:\s*\[[\s\S]*?\]/i', '', $videoArrayStr);
+
             preg_match_all('/\{[\s\S]*?\}/', $videoArrayStr, $objMatches);
             foreach ($objMatches[0] as $index => $objStr) {
                 preg_match('/["\']?title["\']?\s*:\s*["\'](.*?)["\']/i', $objStr, $tMatch);
@@ -356,7 +362,7 @@ class DramaController extends Controller
                 
                 if ($epFile) {
                     $episodes[] = [
-                        'id' => 'ep_' . time() . '_' . $index,
+                        'id' => 'ep_' . (string)Str::uuid(),
                         'episode' => $index + 1,
                         'title' => $epTitle,
                         'videoUrl' => $epFile,
@@ -370,13 +376,18 @@ class DramaController extends Controller
             preg_match('/const\s+playlists\s*=\s*(\[[\s\S]*?\]);/', $html, $playlistsMatch);
             if (!empty($playlistsMatch[1])) {
                 $playlistArrayStr = $playlistsMatch[1];
+                // Unescape
+                $playlistArrayStr = str_replace(['\"', "\'", '\/'], ['"', "'", '/'], $playlistArrayStr);
+                // Strip subtitles
+                $playlistArrayStr = preg_replace('/subtitles\s*:\s*\[[\s\S]*?\]/i', '', $playlistArrayStr);
+
                 preg_match_all('/\{[\s\S]*?\}/', $playlistArrayStr, $objMatches);
                 foreach ($objMatches[0] as $index => $objStr) {
                     preg_match('/["\']?file["\']?\s*:\s*["\'](.*?)["\']/i', $objStr, $fMatch);
                     $epFile = !empty($fMatch[1]) ? $fMatch[1] : "";
                     if ($epFile) {
                         $episodes[] = [
-                            'id' => 'ep_' . time() . '_' . $index,
+                            'id' => 'ep_' . (string)Str::uuid(),
                             'episode' => $index + 1,
                             'title' => "Episode " . ($index + 1),
                             'videoUrl' => $epFile,
@@ -391,7 +402,7 @@ class DramaController extends Controller
             preg_match('/data-video-source=["\']([^"\']*)["\']/i', $html, $sourceMatch);
             if (!empty($sourceMatch[1])) {
                 $episodes[] = [
-                    'id' => 'ep_' . time() . '_0',
+                    'id' => 'ep_' . (string)Str::uuid(),
                     'episode' => 1,
                     'title' => 'Full Movie',
                     'videoUrl' => $sourceMatch[1],
@@ -459,8 +470,9 @@ class DramaController extends Controller
             ];
         }
 
-        // Extract description
-        $description = strip_tags($contentHtml);
+        // Extract description (remove script tags completely first)
+        $cleanHtml = preg_replace('/<script\b[^>]*>([\s\S]*?)<\/script>/i', '', $contentHtml);
+        $description = strip_tags($cleanHtml);
         $description = preg_replace('/\s+/', ' ', $description);
         $description = trim(mb_substr($description, 0, 500));
         if (empty($description)) {
@@ -481,6 +493,11 @@ class DramaController extends Controller
         preg_match('/const\s+videos\s*=\s*(\[[\s\S]*?\]);/', $contentHtml, $videosMatch);
         if (!empty($videosMatch[1])) {
             $videoArrayStr = $videosMatch[1];
+            // Unescape
+            $videoArrayStr = str_replace(['\"', "\'", '\/'], ['"', "'", '/'], $videoArrayStr);
+            // Strip subtitles
+            $videoArrayStr = preg_replace('/subtitles\s*:\s*\[[\s\S]*?\]/i', '', $videoArrayStr);
+
             preg_match_all('/\{[\s\S]*?\}/', $videoArrayStr, $objMatches);
             foreach ($objMatches[0] as $index => $objStr) {
                 preg_match('/["\']?title["\']?\s*:\s*["\'](.*?)["\']/i', $objStr, $tMatch);
@@ -491,7 +508,7 @@ class DramaController extends Controller
                 
                 if ($epFile) {
                     $episodes[] = [
-                        'id' => 'ep_' . time() . '_' . $index,
+                        'id' => 'ep_' . (string)Str::uuid(),
                         'episode' => $index + 1,
                         'title' => $epTitle,
                         'videoUrl' => $epFile,
@@ -505,13 +522,18 @@ class DramaController extends Controller
             preg_match('/const\s+playlists\s*=\s*(\[[\s\S]*?\]);/', $contentHtml, $playlistsMatch);
             if (!empty($playlistsMatch[1])) {
                 $playlistArrayStr = $playlistsMatch[1];
+                // Unescape
+                $playlistArrayStr = str_replace(['\"', "\'", '\/'], ['"', "'", '/'], $playlistArrayStr);
+                // Strip subtitles
+                $playlistArrayStr = preg_replace('/subtitles\s*:\s*\[[\s\S]*?\]/i', '', $playlistArrayStr);
+
                 preg_match_all('/\{[\s\S]*?\}/', $playlistArrayStr, $objMatches);
                 foreach ($objMatches[0] as $index => $objStr) {
                     preg_match('/["\']?file["\']?\s*:\s*["\'](.*?)["\']/i', $objStr, $fMatch);
                     $epFile = !empty($fMatch[1]) ? $fMatch[1] : "";
                     if ($epFile) {
                         $episodes[] = [
-                            'id' => 'ep_' . time() . '_' . $index,
+                            'id' => 'ep_' . (string)Str::uuid(),
                             'episode' => $index + 1,
                             'title' => "Episode " . ($index + 1),
                             'videoUrl' => $epFile,
@@ -526,7 +548,7 @@ class DramaController extends Controller
             preg_match('/data-video-source=["\']([^"\']*)["\']/i', $contentHtml, $sourceMatch);
             if (!empty($sourceMatch[1])) {
                 $episodes[] = [
-                    'id' => 'ep_' . time() . '_0',
+                    'id' => 'ep_' . (string)Str::uuid(),
                     'episode' => 1,
                     'title' => 'Full Movie',
                     'videoUrl' => $sourceMatch[1],
