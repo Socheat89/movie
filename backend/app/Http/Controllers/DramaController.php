@@ -180,6 +180,14 @@ class DramaController extends Controller
                                 $title = $entry['title']['$t'] ?? '';
                                 $content = $entry['content']['$t'] ?? '';
                                 
+                                // Extract release year from HTML content to filter
+                                preg_match('/data-release=["\'](\d{4})["\']/i', $content, $yearMatch);
+                                $year = !empty($yearMatch[1]) ? $yearMatch[1] : '2025';
+                                
+                                if ($year !== '2025' && $year !== '2026') {
+                                    continue; // Skip older years
+                                }
+
                                 $link = '';
                                 if (!empty($entry['link'])) {
                                     foreach ($entry['link'] as $l) {
@@ -266,10 +274,17 @@ class DramaController extends Controller
 
                         if ($subResponse->successful()) {
                             $subHtml = $subResponse->body();
-                            $res = $this->parseAndSaveDrama($subHtml, $link);
-                            if ($res) {
-                                $imported[] = $res;
-                                $count++;
+                            
+                            // Check release year
+                            preg_match('/data-release=["\'](\d{4})["\']/i', $subHtml, $yearMatch);
+                            $year = !empty($yearMatch[1]) ? $yearMatch[1] : '2025';
+
+                            if ($year === '2025' || $year === '2026') {
+                                $res = $this->parseAndSaveDrama($subHtml, $link);
+                                if ($res) {
+                                    $imported[] = $res;
+                                    $count++;
+                                }
                             }
                         }
                     } catch (\Exception $subEx) {
@@ -388,6 +403,10 @@ class DramaController extends Controller
             return null;
         }
 
+        // Extract release year
+        preg_match('/data-release=["\'](\d{4})["\']/i', $html, $yearMatch);
+        $year = !empty($yearMatch[1]) ? $yearMatch[1] : '2025';
+
         // Save to database
         $dramaId = (string)Str::uuid();
         $drama = Drama::create([
@@ -401,7 +420,7 @@ class DramaController extends Controller
             'status' => '',
             'totalEpisodes' => count($episodes),
             'source' => '',
-            'year' => '2025',
+            'year' => $year,
             'rating' => '8.5',
             'views' => 0
         ]);
@@ -519,6 +538,10 @@ class DramaController extends Controller
             return null;
         }
 
+        // Extract release year
+        preg_match('/data-release=["\'](\d{4})["\']/i', $contentHtml, $yearMatch);
+        $year = !empty($yearMatch[1]) ? $yearMatch[1] : '2025';
+
         // Save
         $dramaId = (string)Str::uuid();
         $drama = Drama::create([
@@ -532,7 +555,7 @@ class DramaController extends Controller
             'status' => '',
             'totalEpisodes' => count($episodes),
             'source' => '',
-            'year' => '2025',
+            'year' => $year,
             'rating' => '8.5',
             'views' => 0
         ]);
