@@ -192,8 +192,9 @@ export default function Watch({ dramaId, onNavigate }) {
       return (
         <video key={url} controls autoPlay preload="auto" controlsList="nodownload"
           onContextMenu={(e) => e.preventDefault()}
+          referrerPolicy="no-referrer"
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}>
-          <source src={cleanUrl} type="video/mp4" />
+          <source src={cleanUrl} type="video/mp4" referrerPolicy="no-referrer" />
         </video>
       );
     }
