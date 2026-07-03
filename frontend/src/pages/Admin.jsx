@@ -21,6 +21,7 @@ export default function Admin({ onNavigate }) {
 
   // Table action dropdown state
   const [activeDropdownId, setActiveDropdownId] = useState(null);
+  const [selectedDramaIds, setSelectedDramaIds] = useState([]);
 
   // Drama Modal State
   const [dramaModalOpen, setDramaModalOpen] = useState(false);
@@ -257,6 +258,38 @@ export default function Admin({ onNavigate }) {
         }
         loadDashboardData();
       });
+    }
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedDramaIds(filteredDramas.map(d => d.id));
+    } else {
+      setSelectedDramaIds([]);
+    }
+  };
+
+  const handleSelectDrama = (id) => {
+    setSelectedDramaIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    const count = selectedDramaIds.length;
+    if (count === 0) return;
+    const ok = window.confirm(`Are you sure you want to permanently delete these ${count} selected dramas and all their episodes?`);
+    if (ok) {
+      showToast('Deleting selected dramas...', 'info');
+      try {
+        await Promise.all(selectedDramaIds.map(id => API.deleteDrama(id)));
+        showToast(`Successfully deleted ${count} dramas.`, 'success');
+        setSelectedDramaIds([]);
+        loadDashboardData();
+      } catch (err) {
+        showToast('Error during bulk deletion: ' + (err.message || 'unknown'), 'error');
+        loadDashboardData();
+      }
     }
   };
 
@@ -576,6 +609,29 @@ export default function Admin({ onNavigate }) {
                 <ShareIcon size={14} style={{ transform: 'rotate(90deg)' }} /> Upload JSON
               </button>
               <input type="file" id="json-upload" accept=".json" onChange={handleJsonUpload} style={{ display: 'none' }} />
+              
+              {selectedDramaIds.length > 0 && (
+                <button 
+                  className="btn" 
+                  onClick={handleBulkDelete}
+                  style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: '6px', 
+                    background: '#ff4b4b', 
+                    color: 'white', 
+                    border: 'none', 
+                    padding: '8px 16px', 
+                    borderRadius: 'var(--r-sm)', 
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    boxShadow: '0 0 10px rgba(255, 75, 75, 0.2)'
+                  }}
+                >
+                  <TrashIcon size={14} /> Delete Selected ({selectedDramaIds.length})
+                </button>
+              )}
+
               <button className="btn btn-primary" onClick={() => openDramaModal(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <PlusIcon size={14} /> Add Drama
               </button>
@@ -603,9 +659,18 @@ export default function Admin({ onNavigate }) {
             )}
 
             <div className="admin-table-wrapper" style={{ background: 'var(--bg-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-              <table className="admin-table">
+               <table className="admin-table">
                 <thead>
                   <tr>
+                    <th style={{ width: '45px', textAlign: 'center', paddingLeft: '16px' }}>
+                      <input
+                        type="checkbox"
+                        checked={filteredDramas.length > 0 && selectedDramaIds.length === filteredDramas.length}
+                        onChange={handleSelectAll}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent)' }}
+                        title="Select/Deselect All"
+                      />
+                    </th>
                     <th>Poster</th>
                     <th>Title</th>
                     <th>Genre</th>
@@ -618,13 +683,21 @@ export default function Admin({ onNavigate }) {
                 <tbody>
                   {filteredDramas.length === 0 ? (
                     <tr>
-                      <td colSpan="7" style={{ textAlign: 'center', padding: '52px', color: 'var(--text-2)' }}>
+                      <td colSpan="8" style={{ textAlign: 'center', padding: '52px', color: 'var(--text-2)' }}>
                         No dramas yet. Click <strong>+ Add Drama</strong> or use the Link Scraper tool above.
                       </td>
                     </tr>
                   ) : (
                     filteredDramas.map(d => (
                       <tr key={d.id}>
+                        <td style={{ textAlign: 'center', paddingLeft: '16px' }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedDramaIds.includes(d.id)}
+                            onChange={() => handleSelectDrama(d.id)}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent)' }}
+                          />
+                        </td>
                         <td>
                           <img className="table-poster" src={d.poster} alt={d.title} onError={(e) => { e.target.style.background = 'var(--bg-3)'; e.target.removeAttribute('src'); }} />
                         </td>

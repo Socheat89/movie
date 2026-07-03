@@ -12,6 +12,23 @@ class DramaController extends Controller
 {
     public function index()
     {
+        // Auto-clean bad descriptions containing script tags or playlist code
+        $badDramas = Drama::where('description', 'like', '%const %')
+            ->orWhere('description', 'like', '%playlists%')
+            ->orWhere('description', 'like', '%videos%')
+            ->get();
+        foreach ($badDramas as $bd) {
+            $clean = preg_replace('/<script\b[^>]*>([\s\S]*?)<\/script>/i', '', $bd->description);
+            $clean = preg_replace('/const\s+(?:playlists|videos|subtitles)[\s\S]*/i', '', $clean);
+            $clean = strip_tags($clean);
+            $clean = preg_replace('/\s+/', ' ', $clean);
+            $clean = trim($clean);
+            if (empty($clean)) {
+                $clean = 'No description available.';
+            }
+            $bd->update(['description' => $clean]);
+        }
+
         $dramas = Drama::withCount('episodes')->get()->map(function($drama) {
             return [
                 'id' => $drama->id,
