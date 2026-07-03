@@ -121,10 +121,10 @@ export const API = {
     return _authed;
   },
 
-  async scrapeUrl(url) {
+  async scrapeUrl(url, genre) {
     return apiFetch('/api/admin/scrape', {
       method: 'POST',
-      body: JSON.stringify({ url })
+      body: JSON.stringify({ url, genre })
     });
   },
 

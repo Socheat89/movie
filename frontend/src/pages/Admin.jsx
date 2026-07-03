@@ -16,6 +16,7 @@ export default function Admin({ onNavigate }) {
 
   // Scraper State
   const [importUrl, setImportUrl] = useState('');
+  const [importGenre, setImportGenre] = useState('Action');
   const [scraping, setScraping] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState(0);
 
@@ -155,7 +156,7 @@ export default function Admin({ onNavigate }) {
     }, 350);
 
     try {
-      const res = await API.scrapeUrl(importUrl);
+      const res = await API.scrapeUrl(importUrl, importGenre);
       clearInterval(interval);
       setScrapeProgress(100);
       if (res.isBulk) {
@@ -598,15 +599,26 @@ export default function Admin({ onNavigate }) {
               />
 
               {/* Import from URL Form */}
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 2, minWidth: '300px' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 2, minWidth: '400px' }}>
                 <input
                   className="form-input"
                   type="url"
                   placeholder="Paste KhmerKomsan movie URL..."
                   value={importUrl}
                   onChange={e => setImportUrl(e.target.value)}
-                  style={{ margin: 0, flex: 1 }}
+                  style={{ margin: 0, flex: 2 }}
                 />
+                <select
+                  className="form-input"
+                  value={importGenre}
+                  onChange={e => setImportGenre(e.target.value)}
+                  style={{ margin: 0, width: 'auto', background: 'var(--bg-3)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '6px 12px', cursor: 'pointer' }}
+                  title="Category to import to"
+                >
+                  {categories.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
                 <button className="btn btn-ghost" onClick={handleScrape} disabled={scraping} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <AdminIcon active={scraping} size={14} />
                   {scraping ? 'Fetching…' : 'Fetch & Import'}
