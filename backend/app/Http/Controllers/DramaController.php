@@ -175,6 +175,7 @@ class DramaController extends Controller
             $poster = !empty($posterMatch[1]) ? $posterMatch[1] : 'https://picsum.photos/300/450';
 
             // Extract episodes
+            // Format 1: const videos = [...]
             preg_match('/const\s+videos\s*=\s*(\[[\s\S]*?\]);/', $html, $videosMatch);
             $episodes = [];
             if (!empty($videosMatch[1])) {
@@ -195,6 +196,40 @@ class DramaController extends Controller
                             'videoUrl' => $epFile,
                         ];
                     }
+                }
+            }
+
+            // Format 2 (e.g. kh7hd.cc playlists): const playlists = [...]
+            if (empty($episodes)) {
+                preg_match('/const\s+playlists\s*=\s*(\[[\s\S]*?\]);/', $html, $playlistsMatch);
+                if (!empty($playlistsMatch[1])) {
+                    $playlistArrayStr = $playlistsMatch[1];
+                    preg_match_all('/\{[\s\S]*?\}/', $playlistArrayStr, $objMatches);
+                    foreach ($objMatches[0] as $index => $objStr) {
+                        preg_match('/["\']?file["\']?\s*:\s*["\'](.*?)["\']/i', $objStr, $fMatch);
+                        $epFile = !empty($fMatch[1]) ? $fMatch[1] : "";
+                        if ($epFile) {
+                            $episodes[] = [
+                                'id' => 'ep_' . time() . '_' . $index,
+                                'episode' => $index + 1,
+                                'title' => "Episode " . ($index + 1),
+                                'videoUrl' => $epFile,
+                            ];
+                        }
+                    }
+                }
+            }
+
+            // Format 3 (e.g. kh7hd.cc single video-source): data-video-source="..."
+            if (empty($episodes)) {
+                preg_match('/data-video-source=["\']([^"\']*)["\']/i', $html, $sourceMatch);
+                if (!empty($sourceMatch[1])) {
+                    $episodes[] = [
+                        'id' => 'ep_' . time() . '_0',
+                        'episode' => 1,
+                        'title' => 'Full Movie',
+                        'videoUrl' => $sourceMatch[1],
+                    ];
                 }
             }
 
