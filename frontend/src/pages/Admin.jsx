@@ -46,6 +46,11 @@ export default function Admin({ onNavigate }) {
 
   // Search Drama
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Categories management state
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -263,7 +268,7 @@ export default function Admin({ onNavigate }) {
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedDramaIds(filteredDramas.map(d => d.id));
+      setSelectedDramaIds(paginatedDramas.map(d => d.id));
     } else {
       setSelectedDramaIds([]);
     }
@@ -471,6 +476,9 @@ export default function Admin({ onNavigate }) {
     d.genre.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const startIndex = (currentPage - 1) * 20;
+  const paginatedDramas = filteredDramas.slice(startIndex, startIndex + 20);
+
   const activeDramaName = dramas.find(d => d.id === activeDramaId)?.title || 'Select a Drama';
 
   if (!authed) {
@@ -665,7 +673,7 @@ export default function Admin({ onNavigate }) {
                     <th style={{ width: '45px', textAlign: 'center', paddingLeft: '16px' }}>
                       <input
                         type="checkbox"
-                        checked={filteredDramas.length > 0 && selectedDramaIds.length === filteredDramas.length}
+                        checked={paginatedDramas.length > 0 && paginatedDramas.every(d => selectedDramaIds.includes(d.id))}
                         onChange={handleSelectAll}
                         style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent)' }}
                         title="Select/Deselect All"
@@ -688,7 +696,7 @@ export default function Admin({ onNavigate }) {
                       </td>
                     </tr>
                   ) : (
-                    filteredDramas.map(d => (
+                    paginatedDramas.map(d => (
                       <tr key={d.id}>
                         <td style={{ textAlign: 'center', paddingLeft: '16px' }}>
                           <input
@@ -815,6 +823,43 @@ export default function Admin({ onNavigate }) {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {filteredDramas.length > 20 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '0 8px', flexWrap: 'wrap', gap: '12px' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-2)' }}>
+                  Showing {startIndex + 1} to {Math.min(startIndex + 20, filteredDramas.length)} of {filteredDramas.length} dramas
+                </span>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <button 
+                    className="btn btn-ghost btn-sm" 
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    style={{ padding: '6px 12px' }}
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: Math.ceil(filteredDramas.length / 20) }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      className={`btn btn-sm ${currentPage === page ? 'btn-primary' : 'btn-ghost'}`}
+                      onClick={() => setCurrentPage(page)}
+                      style={{ minWidth: '32px', height: '32px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0', borderRadius: 'var(--r-sm)' }}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button 
+                    className="btn btn-ghost btn-sm" 
+                    disabled={currentPage === Math.ceil(filteredDramas.length / 20)}
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredDramas.length / 20)))}
+                    style={{ padding: '6px 12px' }}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

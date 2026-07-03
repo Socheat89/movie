@@ -13,6 +13,11 @@ export default function Home({ onNavigate, initialSection }) {
 
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(9);
+
+  useEffect(() => {
+    setVisibleCount(9);
+  }, [selectedGenre, searchQuery]);
 
   // Search Input Ref
   const searchInputRef = useRef(null);
@@ -310,7 +315,7 @@ export default function Home({ onNavigate, initialSection }) {
                 <p style={{ color: 'var(--text-2)', fontSize: '0.88rem' }}>Try refining your keywords or choosing another category.</p>
               </div>
             ) : (
-              filteredDramas.map((d) => (
+              filteredDramas.slice(0, visibleCount).map((d) => (
                 <article
                   key={d.id}
                   className="drama-card"
@@ -373,6 +378,17 @@ export default function Home({ onNavigate, initialSection }) {
               ))
             )}
           </div>
+          {visibleCount < filteredDramas.length && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => setVisibleCount(prev => prev + 9)}
+                style={{ padding: '10px 24px', fontSize: '0.85rem', borderRadius: '100px' }}
+              >
+                Load More
+              </button>
+            </div>
+          )}
         </section>
       </div>
     );
@@ -580,7 +596,7 @@ export default function Home({ onNavigate, initialSection }) {
               <p style={{ textAlign: 'center', color: 'var(--text-2)' }}>No dramas found.</p>
             </div>
           ) : (
-            filteredDramas.map((d) => (
+            filteredDramas.slice(0, visibleCount).map((d) => (
               <article
                 key={d.id}
                 className="drama-card"
@@ -656,6 +672,17 @@ export default function Home({ onNavigate, initialSection }) {
             ))
           )}
         </div>
+        {visibleCount < filteredDramas.length && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '36px' }}>
+            <button 
+              className="btn btn-primary" 
+              onClick={() => setVisibleCount(prev => prev + 9)}
+              style={{ padding: '12px 32px', fontSize: '0.9rem', borderRadius: '100px' }}
+            >
+              Load More
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );
