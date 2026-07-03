@@ -152,7 +152,11 @@ export default function Admin({ onNavigate }) {
       const res = await API.scrapeUrl(importUrl);
       clearInterval(interval);
       setScrapeProgress(100);
-      showToast(`Imported "${res.title}" (${res.episodeCount} episodes)! 🎉`, 'success');
+      if (res.isBulk) {
+        showToast(`Bulk imported ${res.importedCount} dramas! 🎉`, 'success');
+      } else {
+        showToast(`Imported "${res.title}" (${res.episodeCount} episodes)! 🎉`, 'success');
+      }
       setImportUrl('');
       loadDashboardData();
     } catch (err) {
