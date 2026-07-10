@@ -4,29 +4,14 @@ import { Embed } from '../embed';
 import { updateSeo } from '../seo';
 import { 
   MovieCard, 
-  Card, 
-  CardHeader, 
-  CardContent, 
-  CardFooter,
-  EpisodeCard, 
-  ReviewCard, 
   CastCard,
   Button, 
-  IconButton,
-  SegmentedControl,
-  Select,
   Textarea,
   Input 
 } from '../components/ui';
 import { 
   ChevronLeftIcon, 
-  HeartIcon, 
-  ShareIcon, 
-  StarIcon, 
-  PlayIcon, 
-  BackIcon,
-  CloseIcon,
-  ChevronRightIcon 
+  StarIcon,
 } from '../components/AnimatedIcons';
 
 /* ─── local star-rating & comment store ─── */
@@ -209,7 +194,6 @@ export default function Watch({ dramaId, onNavigate }) {
           color: 'var(--text-tertiary)', gap: 'var(--space-3)',
           textAlign: 'center', padding: 'var(--space-8)'
         }}>
-          <PlayIcon size={44} style={{ color: 'var(--text-tertiary)', opacity: 0.4 }} />
           {activeEpisode ? (
             <>
               <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-secondary)', margin: '0 0 4px' }}>
@@ -230,7 +214,7 @@ export default function Watch({ dramaId, onNavigate }) {
                   color: 'var(--color-system-orange)',
                   lineHeight: '1.5'
                 }}>
-                  💡 <strong>សម្រាប់ Admin:</strong> សូមចូលទៅកាន់ Admin Dashboard ➔ Episodes ➔ ជ្រើសរើសរឿងនេះ រួចបញ្ចូលតំណភ្ជាប់វីដេអូ (Video URL)។
+                  <strong>សម្រាប់ Admin:</strong> សូមចូលទៅកាន់ Admin Dashboard &gt; Episodes &gt; ជ្រើសរើសរឿងនេះ រួចបញ្ចូលតំណភ្ជាប់វីដេអូ (Video URL)។
                 </div>
               )}
             </>
@@ -267,7 +251,6 @@ export default function Watch({ dramaId, onNavigate }) {
           color: 'var(--text-secondary)', gap: 'var(--space-4)',
           textAlign: 'center', padding: 'var(--space-8)'
         }}>
-          <div style={{ fontSize: '2.5rem' }}>📘</div>
           <p style={{ fontSize: '17px', fontWeight: 700 }}>Facebook Video</p>
           <small style={{ textAlign: 'center', lineHeight: 1.7, maxWidth: 300, fontSize: '13px', color: 'var(--text-tertiary)' }}>
             Facebook videos cannot be embedded directly.<br />Click below to watch on Facebook.
@@ -279,7 +262,7 @@ export default function Watch({ dramaId, onNavigate }) {
               borderRadius: 'var(--radius-xl)', fontSize: '15px', fontWeight: 600,
               textDecoration: 'none',
             }}>
-            <PlayIcon size={18} /> Watch on Facebook
+            Watch on Facebook
           </a>
         </div>
       );
@@ -302,10 +285,10 @@ export default function Watch({ dramaId, onNavigate }) {
             padding: '8px 12px', background: 'rgba(0,0,0,0.6)', display: 'flex',
             alignItems: 'center', gap: 10, fontSize: '13px', color: 'var(--text-secondary)'
           }}>
-            <span>💡 បើវីដេអូមិនចាក់ — </span>
+            <span>បើវីដេអូមិនចាក់:</span>
             <a href={url} target="_blank" rel="noopener noreferrer"
               style={{ color: 'var(--brand-primary)', fontWeight: 600, textDecoration: 'none' }}>
-              បើក KhDiaMonD ដោយផ្ទាល់ ↗
+              បើក KhDiaMonD ដោយផ្ទាល់
             </a>
           </div>
         </div>
@@ -339,17 +322,15 @@ export default function Watch({ dramaId, onNavigate }) {
 
   if (error || !drama) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center', padding: 'var(--space-10)' }}>
-      <div style={{ fontSize: '3.5rem', opacity: 0.15, marginBottom: 'var(--space-5)' }}>🎬</div>
       <h2 style={{ font: 'var(--style-title-2)', fontWeight: 700, marginBottom: 'var(--space-2)', letterSpacing: 'var(--tracking-tight)' }}>Movie Not Found</h2>
       <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: 'var(--space-7)' }}>This movie doesn't exist or may have been removed.</p>
-      <Button variant="primary" onClick={() => onNavigate('/')} leftIcon={<BackIcon size={16} />}>
+      <Button variant="primary" onClick={() => onNavigate('/')}>
         Back to Home
       </Button>
     </div>
   );
 
   const episodes = drama.episodes || [];
-  const posterUrl = drama.poster || `https://picsum.photos/seed/${drama.id}/500/750`;
 
   return (
     <div className="page-enter" style={{ maxWidth: 1400, margin: '0 auto', padding: 'var(--space-4) var(--space-5) var(--space-16)' }}>
@@ -403,11 +384,11 @@ export default function Watch({ dramaId, onNavigate }) {
                     color: 'var(--color-system-orange)',
                     borderRadius: 'var(--radius-full)',
                   }}>
-                    🔥 Trending
+                    Trending
                   </span>
                 )}
                 {activeEpisode && (
-                  <span style={{ color: 'var(--text-tertiary)', fontSize: '13px' }}>▶ {activeEpisode.title}</span>
+                  <span style={{ color: 'var(--text-tertiary)', fontSize: '13px' }}>{activeEpisode.title}</span>
                 )}
               </div>
             </div>
@@ -436,7 +417,6 @@ export default function Watch({ dramaId, onNavigate }) {
                   <Button
                     variant={isFavorite ? 'secondary' : 'ghost'}
                     size="sm"
-                    leftIcon={<HeartIcon active={isFavorite} size={15} />}
                     onClick={toggleFavorite}
                     style={{ borderRadius: 'var(--radius-lg)' }}
                   >
@@ -446,7 +426,6 @@ export default function Watch({ dramaId, onNavigate }) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    leftIcon={<ShareIcon copied={shareToast} size={15} />}
                     onClick={handleShare}
                     style={{ borderRadius: 'var(--radius-lg)' }}
                   >
@@ -503,7 +482,6 @@ export default function Watch({ dramaId, onNavigate }) {
                 border: '0.5px solid rgba(255, 255, 255, 0.05)',
                 margin: '0 auto',
               }}>
-                <div style={{ fontSize: '1.5rem', marginBottom: 'var(--space-2)' }}>☕</div>
                 <h4 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 var(--space-1)', color: 'var(--text-primary)' }}>Support Us</h4>
                 <p style={{ color: 'var(--text-tertiary)', fontSize: '12px', lineHeight: 1.4, marginBottom: 'var(--space-3)' }}>
                   Scan to support server costs.
@@ -518,7 +496,7 @@ export default function Watch({ dramaId, onNavigate }) {
                     style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                 </div>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--brand-primary)' }}>
-                  Thank you! ❤️
+                  Thank you
                 </span>
               </div>
             )}
@@ -577,7 +555,7 @@ export default function Watch({ dramaId, onNavigate }) {
                 color: 'var(--success)', fontWeight: 600,
                 animation: 'fadeIn 0.3s ease'
               }}>
-                ✓ Thanks for your rating! 🎉
+                Thanks for your rating.
               </div>
             )}
           </div>
@@ -619,7 +597,7 @@ export default function Watch({ dramaId, onNavigate }) {
             {/* Comment list */}
             {comments.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '15px', padding: 'var(--space-6) 0' }}>
-                No comments yet. Be the first! 🙌
+                No comments yet. Be the first.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>

@@ -61,6 +61,15 @@
   /* Backward Compatibility Aliases for Icon colors */
   --text-2: var(--color-system-gray);
   --text-3: var(--color-system-gray2);
+  --text: var(--text-primary);
+  --bg: var(--bg-primary);
+  --bg-2: var(--bg-secondary);
+  --bg-3: var(--bg-tertiary);
+  --border: var(--border-primary);
+  --r: var(--radius-md);
+  --r-sm: var(--radius-md);
+  --r-md: var(--radius-lg);
+  --r-lg: var(--radius-xl);
   --accent: var(--color-brand-primary);
   --accent-lt: var(--color-brand-primary-light);
   --accent-glow: rgba(229, 9, 20, 0.15);
@@ -160,7 +169,7 @@
   --font-bold: 700;
 
   /* Letter Spacing */
-  --tracking-tight: -0.04em;
+  --tracking-tight: 0;
   --tracking-normal: 0;
   --tracking-wide: 0.02em;
 

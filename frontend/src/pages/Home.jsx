@@ -4,19 +4,11 @@ import { updateSeo } from '../seo';
 import {
   Button,
   MovieCard,
-  Card,
-  CardHeader,
-  CardContent,
-  NavBar,
-  TabBar,
   SearchBar,
   FilterChips,
-  SectionHeader,
   Skeleton,
-  Badge,
-  Modal,
 } from '../components/ui';
-import { PlayIcon, HeartIcon, SearchIcon, CloseIcon, HomeIcon, BookmarkIcon, UserIcon, StarFillIcon } from '../components/AnimatedIcons';
+import { HeartIcon, SearchIcon, CloseIcon } from '../components/AnimatedIcons';
 
 export default function Home({ onNavigate, initialSection, onShowInstall }) {
   const [dramas, setDramas] = useState([]);
@@ -36,7 +28,7 @@ export default function Home({ onNavigate, initialSection, onShowInstall }) {
     try {
       const saved = localStorage.getItem('favorites');
       return saved ? JSON.parse(saved) : [];
-    } catch (err) {
+    } catch {
       return [];
     }
   });
@@ -103,10 +95,14 @@ export default function Home({ onNavigate, initialSection, onShowInstall }) {
   // Filter dramas based on selected genre and search query
   const filteredDramas = dramas.filter(d => {
     const matchesGenre = selectedGenre === 'All' || d.genre === selectedGenre;
+    const title = (d.title || '').toLowerCase();
+    const genre = (d.genre || '').toLowerCase();
+    const year = d.year ? d.year.toString() : '';
+    const query = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery.trim() ||
-      d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (d.genre && d.genre.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (d.year && d.year.toString().includes(searchQuery));
+      title.includes(query) ||
+      genre.includes(query) ||
+      year.includes(searchQuery);
     return matchesGenre && matchesSearch;
   });
 
@@ -168,7 +164,6 @@ export default function Home({ onNavigate, initialSection, onShowInstall }) {
   if (error) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center', padding: 'var(--space-8)' }}>
-        <div style={{ fontSize: '3rem', opacity: 0.2, marginBottom: 'var(--space-4)' }}>⚠️</div>
         <h2 style={{ font: 'var(--style-title-2)', marginBottom: 'var(--space-2)', letterSpacing: 'var(--tracking-tight)' }}>Cannot connect to server</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: 'var(--space-6)' }}>
           Make sure the backend is running.
@@ -251,7 +246,6 @@ export default function Home({ onNavigate, initialSection, onShowInstall }) {
           <div className="dramas-grid">
             {filteredDramas.length === 0 ? (
               <div className="no-results" style={{ gridColumn: '1/-1', padding: 'var(--space-16) var(--space-6)' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: 'var(--space-4)', opacity: 0.2 }}>🔍</div>
                 <h3 style={{ font: 'var(--style-title-3)', marginBottom: 'var(--space-2)', letterSpacing: 'var(--tracking-tight)' }}>No matches found</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>Try different keywords or another category.</p>
               </div>
@@ -310,13 +304,12 @@ export default function Home({ onNavigate, initialSection, onShowInstall }) {
                 <div className="hero-bg" style={{ backgroundImage: `url('${d.poster}')` }}></div>
                 <div className="hero-gradient"></div>
                 <div className="hero-content">
-                  <span className="hero-badge">🔥 Trending</span>
+                  <span className="hero-badge">Trending</span>
                   <h1 className="hero-title">{d.title}</h1>
                   <p className="hero-desc">{(d.description || 'No description available.').replace(/\{\w+\}[^\s]*/g, '').trim() || 'No description available.'}</p>
                   <div className="hero-actions">
                     <Button
                       variant="primary"
-                      leftIcon={<PlayIcon size={18} />}
                       onClick={() => onNavigate(`/watch/${d.id}`)}
                       size="lg"
                       style={{ borderRadius: 'var(--radius-xl)' }}
@@ -334,7 +327,7 @@ export default function Home({ onNavigate, initialSection, onShowInstall }) {
                       }}>{d.genre}</span>
                       <span style={{ color: 'var(--text-tertiary)' }}>{d.year || '2025'}</span>
                       <span style={{ color: 'var(--rating-gold)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                        <StarFillIcon size={11} /> {d.rating || '8.0'}
+                        {d.rating || '8.0'} rating
                       </span>
                       <span style={{ color: 'var(--text-quaternary)' }}>{formatViews(d.views || 0)}</span>
                     </div>
@@ -394,7 +387,6 @@ export default function Home({ onNavigate, initialSection, onShowInstall }) {
             gap: 'var(--space-3)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-              <span style={{ fontSize: '1.8rem' }}>📱</span>
               <div>
                 <h4 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
                   ដំឡើងកម្មវិធីទូរស័ព្ទ Mekong Movie
@@ -510,7 +502,6 @@ export default function Home({ onNavigate, initialSection, onShowInstall }) {
         <div className="dramas-grid">
           {filteredDramas.length === 0 ? (
             <div className="no-results" style={{ gridColumn: '1/-1', padding: 'var(--space-16) var(--space-6)' }}>
-              <div style={{ fontSize: '2.5rem', textAlign: 'center', opacity: 0.2 }}>🎬</div>
               <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '15px', marginTop: 'var(--space-3)' }}>No movies found.</p>
             </div>
           ) : (

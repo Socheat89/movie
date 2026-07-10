@@ -1,5 +1,4 @@
 import React from 'react';
-import { PlayIcon, HeartIcon, SearchIcon, CloseIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, MinusIcon, CheckIcon, XIcon, ShareIcon, DownloadIcon, BookmarkIcon, BookmarkFillIcon, EllipsisIcon } from '../AnimatedIcons';
 
 export const Button = React.forwardRef(
   (

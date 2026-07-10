@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlayIcon, HeartIcon, BookmarkIcon, BookmarkFillIcon, StarIcon, ClockIcon, CalendarIcon, TagIcon, ChevronRightIcon, EllipsisIcon, CheckIcon, XIcon } from '../AnimatedIcons';
+import { HeartIcon, StarIcon, ClockIcon, CheckIcon } from '../AnimatedIcons';
 import { Button } from './Button';
 
 export const Card = React.forwardRef(
@@ -164,20 +164,20 @@ export const CardFooter = ({ children, className = '', style = {} }) => (
 
 export const MovieCard = ({
   movie,
-  variant = 'poster',
+  variant: _variant = 'poster',
   onClick,
   onFavorite,
-  onWatchlist,
+  onWatchlist: _onWatchlist,
   isFavorite = false,
-  isInWatchlist = false,
+  isInWatchlist: _isInWatchlist = false,
   showOverlay = true,
   className = '',
   style = {},
-  index,
+  index: _index,
   showRating = true,
   showMeta = true,
   showFavorite = true,
-  showWatchlist = false,
+  showWatchlist: _showWatchlist = false,
 }) => {
   const {
     id,
@@ -186,19 +186,8 @@ export const MovieCard = ({
     year,
     genre,
     rating,
-    views,
-    episodeCount,
-    duration,
     trending,
-    description,
   } = movie;
-
-  const formatViews = (count) => {
-    if (!count) return '0';
-    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
-    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
-    return count.toString();
-  };
 
   const posterUrl = poster || `https://picsum.photos/seed/${id}/300/450`;
 
@@ -290,7 +279,7 @@ export const MovieCard = ({
               zIndex: 2,
             }}
           >
-            🔥 Trending
+            Trending
           </span>
         )}
 
@@ -369,7 +358,6 @@ export const MovieCard = ({
             <Button
               variant="primary"
               size="sm"
-              leftIcon={<PlayIcon size={14} />}
               style={{ width: '100%', borderRadius: 'var(--radius-md)' }}
             >
               Watch
@@ -434,7 +422,7 @@ export const CastCard = ({
   className = '',
   style = {},
 }) => {
-  const { id, name, character, profilePath, order } = cast;
+  const { id, name, character, profilePath } = cast;
   const imageUrl = profilePath || `https://picsum.photos/seed/${id}/200/300`;
 
   return (
@@ -485,7 +473,7 @@ export const ReviewCard = ({
   className = '',
   style = {},
 }) => {
-  const { author, avatar, rating, date, content, helpful, isExpanded = false } = review;
+  const { author, avatar, rating, date, content, isExpanded = false } = review;
 
   return (
     <Card variant="flat" className={className} style={{ ...style, padding: 'var(--space-4)' }}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HomeIcon, SearchIcon, HeartIcon, UserIcon, BellIcon, MenuIcon, CloseIcon, LogoIcon, ChevronLeftIcon, ChevronRightIcon } from '../AnimatedIcons';
+import { SearchIcon, CloseIcon, LogoIcon, ChevronLeftIcon, ChevronRightIcon } from '../AnimatedIcons';
 import { IconButton } from './Button';
 
 export const NavBar = ({
@@ -7,11 +7,11 @@ export const NavBar = ({
   showBack = false,
   onBack,
   actions = [],
-  largeTitle = false,
+  largeTitle: _largeTitle = false,
   transparent = false,
   className = '',
   style = {},
-  currentHash = '',
+  currentHash: _currentHash = '',
 }) => {
   const navStyle = {
     position: 'fixed',
@@ -108,7 +108,7 @@ export const TabBar = ({
   onChange,
   className = '',
   style = {},
-  variant = 'standard',
+  variant: _variant = 'standard',
 }) => {
   const tabBarStyle = {
     position: 'fixed',
@@ -189,7 +189,7 @@ export const TabBar = ({
   );
 };
 
-export const SearchBar = ({
+export const SearchBar = React.forwardRef(({
   value,
   onChange,
   onClear,
@@ -201,9 +201,11 @@ export const SearchBar = ({
   onCancel,
   className = '',
   style = {},
-}) => {
+}, ref) => {
   const [focused, setFocused] = React.useState(false);
   const inputRef = React.useRef(null);
+
+  React.useImperativeHandle(ref, () => inputRef.current);
 
   React.useEffect(() => {
     if (autoFocus && inputRef.current) {
@@ -309,7 +311,9 @@ export const SearchBar = ({
       )}
     </div>
   );
-};
+});
+
+SearchBar.displayName = 'SearchBar';
 
 export const SegmentedControl = ({
   options,

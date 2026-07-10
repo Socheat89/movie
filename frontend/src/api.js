@@ -2,8 +2,8 @@ const API_BASE_URL = (function () {
   const LOCAL = 'http://localhost:8000';
   const PRODUCTION = 'https://movie.mekongcyberunit.app/backend/public';
 
-  // Use local server for localhost development, production otherwise
-  return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? LOCAL : PRODUCTION;
+  // Always use the production API as all data is retrieved from production
+  return PRODUCTION;
 })();
 
 async function apiFetch(path, options = {}) {

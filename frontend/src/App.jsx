@@ -3,11 +3,10 @@ import Home from './pages/Home';
 import Watch from './pages/Watch';
 import Admin from './pages/Admin';
 import { NavBar, TabBar, Modal, Button } from './components/ui';
-import { LogoIcon, HomeIcon, SearchIcon, HeartIcon, UserIcon, MenuIcon, BellIcon } from './components/AnimatedIcons';
+import { LogoIcon, HomeIcon, SearchIcon, HeartIcon } from './components/AnimatedIcons';
 
 function App() {
   const [hash, setHash] = useState(window.location.hash || '#/');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Install app states
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -17,7 +16,6 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       setHash(window.location.hash || '#/');
-      setMobileMenuOpen(false); // Close mobile nav on navigate
       window.scrollTo({ top: 0, behavior: 'instant' });
     };
 
@@ -69,28 +67,22 @@ function App() {
     currentPage = <Home onNavigate={navigate} onShowInstall={handleShowInstall} />;
   }
 
-  const isHomeActive = page === '' || page === 'home' || page === 'search' || page === 'favorites';
-
   const iosSteps = [
     {
       title: "បើកក្នុងកម្មវិធី Safari",
       desc: "បើកគេហទំព័រនេះនៅលើទូរស័ព្ទ iPhone របស់អ្នក ដោយប្រើកម្មវិធី Safari។",
-      icon: "🌐",
     },
     {
       title: "ចុចលើប៊ូតុង Share",
       desc: "ចុចលើប៊ូតុង Share (ចែករំលែក) ដែលស្ថិតនៅរបារខាងក្រោមនៃទូរស័ព្ទ។",
-      icon: "📤",
     },
     {
       title: "ជ្រើសរើស 'Add to Home Screen'",
       desc: "អូសចុះក្រោមបន្តិច រួចចុចយកពាក្យថា 'Add to Home Screen' (ឬ 'បន្ថែមទៅអេក្រង់ដើម')។",
-      icon: "➕",
     },
     {
       title: "ចុចពាក្យ 'Add' ដើម្បីបញ្ចប់",
       desc: "ចុចលើពាក្យ 'Add' (ឬ 'បន្ថែម') នៅផ្នែកខាងស្តាំខាងលើជាការស្រេច។",
-      icon: "✅",
     }
   ];
 
@@ -98,32 +90,22 @@ function App() {
     {
       title: "បើកក្នុង Google Chrome",
       desc: "បើកគេហទំព័រនេះនៅលើទូរស័ព្ទ Android របស់អ្នក ដោយប្រើកម្មវិធី Google Chrome។",
-      icon: "🌐",
     },
     {
       title: "ចុចលើចំណុចបី (Menu)",
       desc: "ចុចលើប៊ូតុងម៉ឺនុយ (ចំណុចបី) នៅផ្នែកខាងស្តាំខាងលើបង្អស់។",
-      icon: "⋮",
     },
     {
       title: "ជ្រើសរើស 'Install App'",
       desc: "ចុចយកពាក្យថា 'Install App' (ឬ 'ដំឡើងកម្មវិធី' / 'បន្ថែមទៅអេក្រង់ដើម')។",
-      icon: "📲",
     },
     {
       title: "ចុច 'Install' ដើម្បីដំឡើង",
       desc: "ប្រអប់បញ្ជាក់នឹងបង្ហាញឡើង រួចចុចពាក្យ 'Install' (ឬ 'ដំឡើង') ជាការស្រេច។",
-      icon: "✅",
     }
   ];
 
   const steps = installPlatform === 'ios' ? iosSteps : androidSteps;
-
-  const navItems = [
-    { value: '', label: 'Home', icon: HomeIcon },
-    { value: 'search', label: 'Search', icon: SearchIcon },
-    { value: 'favorites', label: 'Favorites', icon: HeartIcon },
-  ];
 
   const tabItems = [
     { value: '', label: 'Home', icon: HomeIcon },
@@ -196,7 +178,7 @@ function App() {
                 border: 'none',
               }}
             >
-              🍎 iPhone (iOS)
+              iPhone (iOS)
             </button>
             <button
               onClick={() => { setInstallPlatform('android'); setCurrentStep(0); }}
@@ -212,7 +194,7 @@ function App() {
                 border: 'none',
               }}
             >
-              🤖 Android
+              Android
             </button>
           </div>
 
@@ -229,8 +211,20 @@ function App() {
             alignItems: 'center',
             gap: 'var(--space-3)',
           }} key={`${installPlatform}-${currentStep}`}>
-            <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '8px' }}>
-              {steps[currentStep].icon}
+            <span style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: 'var(--radius-full)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '8px',
+              backgroundColor: 'rgba(229, 9, 20, 0.12)',
+              color: 'var(--brand-primary)',
+              fontSize: '17px',
+              fontWeight: 700,
+            }}>
+              {currentStep + 1}
             </span>
             <h4 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--color-brand-primary)', margin: 0 }}>
               {steps[currentStep].title}

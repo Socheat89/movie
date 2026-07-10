@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { API } from '../api';
 import { Embed } from '../embed';
-import { BackIcon, CloseIcon, AdminIcon, CheckIcon, InfoIcon, ErrorIcon, LogoIcon, PlayIcon, EditIcon, TrashIcon, PlusIcon, TagIcon, ShareIcon } from '../components/AnimatedIcons';
+import { CloseIcon, AdminIcon, CheckIcon, InfoIcon, ErrorIcon } from '../components/AnimatedIcons';
 import { Modal } from '../components/ui';
 
 export default function Admin({ onNavigate }) {
@@ -71,7 +71,7 @@ export default function Admin({ onNavigate }) {
     if (categories.length > 0 && !selectedCategoryForAssign) {
       setSelectedCategoryForAssign(categories[0]);
     }
-  }, [categories]);
+  }, [categories, selectedCategoryForAssign]);
 
   useEffect(() => {
     if (selectedCategoryForAssign) {
@@ -125,7 +125,7 @@ export default function Admin({ onNavigate }) {
     }, 3200);
   };
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoadingDashboard(true);
     try {
       const [dramasRes, categoriesRes, qrRes] = await Promise.all([
@@ -147,13 +147,13 @@ export default function Admin({ onNavigate }) {
     } finally {
       setLoadingDashboard(false);
     }
-  };
+  }, [activeDramaId]);
 
   useEffect(() => {
     if (authed) {
       loadDashboardData();
     }
-  }, [authed]);
+  }, [authed, loadDashboardData]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -165,7 +165,7 @@ export default function Admin({ onNavigate }) {
     const ok = await API.checkAdmin(password);
     setChecking(false);
     if (ok) {
-      showToast('Welcome back, Admin! 👋', 'success');
+      showToast('Welcome back, Admin.', 'success');
       setAuthed(true);
     } else {
       showToast('Incorrect password. Try again.', 'error');
@@ -229,9 +229,9 @@ export default function Admin({ onNavigate }) {
         clearInterval(interval);
         setScrapeProgress(100);
         if (res.isBulk) {
-          showToast(`Bulk imported ${res.importedCount} dramas! 🎉`, 'success');
+          showToast(`Bulk imported ${res.importedCount} dramas.`, 'success');
         } else {
-          showToast(`Imported "${res.title}" (${res.episodeCount} episodes)! 🎉`, 'success');
+          showToast(`Imported "${res.title}" (${res.episodeCount} episodes).`, 'success');
         }
         setImportUrl('');
         loadDashboardData();
@@ -273,7 +273,7 @@ export default function Admin({ onNavigate }) {
       const res = await API.scrapeImport(selectedMovies, selectedScrapeCategory);
       clearInterval(interval);
       setScrapeProgress(100);
-      showToast(`Imported ${res.importedCount} movies into "${selectedScrapeCategory}" category! 🎉`, 'success');
+      showToast(`Imported ${res.importedCount} movies into "${selectedScrapeCategory}" category.`, 'success');
       setImportUrl('');
       loadDashboardData();
     } catch (err) {
@@ -300,9 +300,9 @@ export default function Admin({ onNavigate }) {
           return;
         }
         await API.addDrama(drama);
-        showToast(`Imported "${drama.title}"! 🎉`, 'success');
+        showToast(`Imported "${drama.title}".`, 'success');
         loadDashboardData();
-      } catch (err) {
+      } catch {
         showToast('Failed to parse JSON file.', 'error');
       }
     };
@@ -352,10 +352,10 @@ export default function Admin({ onNavigate }) {
     try {
       if (editingDrama) {
         await API.updateDrama(editingDrama.id, payload);
-        showToast('Drama updated! ✅', 'success');
+        showToast('Drama updated.', 'success');
       } else {
         await API.addDrama(payload);
-        showToast('Drama created! 🎬', 'success');
+        showToast('Drama created.', 'success');
       }
       setDramaModalOpen(false);
       loadDashboardData();
@@ -413,7 +413,7 @@ export default function Admin({ onNavigate }) {
   const [activeDramaDetails, setActiveDramaDetails] = useState(null);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
 
-  const loadActiveDramaDetails = async () => {
+  const loadActiveDramaDetails = useCallback(async () => {
     if (!activeDramaId) {
       setActiveDramaDetails(null);
       return;
@@ -427,13 +427,13 @@ export default function Admin({ onNavigate }) {
     } finally {
       setLoadingEpisodes(false);
     }
-  };
+  }, [activeDramaId]);
 
   useEffect(() => {
     if (authed && activeTab === 'episodes') {
       loadActiveDramaDetails();
     }
-  }, [activeDramaId, activeTab, authed]);
+  }, [activeTab, authed, loadActiveDramaDetails]);
 
   const openEpisodeModal = (ep = null) => {
     setEditingEpisode(ep);
@@ -461,10 +461,10 @@ export default function Admin({ onNavigate }) {
     try {
       if (editingEpisode) {
         await API.updateEpisode(activeDramaId, editingEpisode.id, episodeForm);
-        showToast('Episode updated! ✅', 'success');
+        showToast('Episode updated.', 'success');
       } else {
         await API.addEpisode(activeDramaId, episodeForm);
-        showToast('Episode added! ▶', 'success');
+        showToast('Episode added.', 'success');
       }
       setEpisodeModalOpen(false);
       loadActiveDramaDetails();
@@ -506,7 +506,7 @@ export default function Admin({ onNavigate }) {
     setSavingCategories(true);
     try {
       await API.saveCategories(categories);
-      showToast('Categories list saved successfully! 🏷️', 'success');
+      showToast('Categories list saved successfully.', 'success');
     } catch (err) {
       showToast('Failed to save categories: ' + (err.message || 'error'), 'error');
     } finally {
@@ -532,7 +532,7 @@ export default function Admin({ onNavigate }) {
     setUpdatingPassword(true);
     try {
       await API.changePassword(oldPassword, newPassword);
-      showToast('Password updated successfully! 🔑', 'success');
+      showToast('Password updated successfully.', 'success');
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
       showToast('Failed to update password: ' + (err.message || 'unknown error'), 'error');
@@ -547,7 +547,7 @@ export default function Admin({ onNavigate }) {
     setSavingSponsorQr(true);
     try {
       await API.saveSponsorQr(sponsorQrFormUrl);
-      showToast('Sponsor QR code saved successfully! 💳', 'success');
+      showToast('Sponsor QR code saved successfully.', 'success');
     } catch (err) {
       showToast('Failed to save QR code: ' + (err.message || 'error'), 'error');
     } finally {
@@ -563,7 +563,7 @@ export default function Admin({ onNavigate }) {
     try {
       const res = await API.uploadSponsorQr(file);
       setSponsorQrFormUrl(res.qr_url);
-      showToast('QR Code image uploaded successfully! 📁', 'success');
+      showToast('QR Code image uploaded successfully.', 'success');
     } catch (err) {
       console.error(err);
       showToast('Upload failed: ' + (err.message || 'unknown error'), 'error');
@@ -582,10 +582,11 @@ export default function Admin({ onNavigate }) {
   };
 
   // Filter dramas by search
-  const filteredDramas = dramas.filter(d =>
-    d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    d.genre.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredDramas = dramas.filter(d => {
+    const query = searchQuery.toLowerCase();
+    return (d.title || '').toLowerCase().includes(query) ||
+      (d.genre || '').toLowerCase().includes(query);
+  });
 
   const startIndex = (currentPage - 1) * 20;
   const paginatedDramas = filteredDramas.slice(startIndex, startIndex + 20);
@@ -608,7 +609,7 @@ export default function Admin({ onNavigate }) {
           <h1 className="login-title" style={{ marginTop: '12px' }}>Admin Panel</h1>
           <p className="login-subtitle">Enter your admin password to manage content</p>
 
-          <form onSubmit={handleLogin} novalidate>
+          <form onSubmit={handleLogin} noValidate>
             <div className="form-group">
               <label className="form-label" htmlFor="admin-pwd">Password</label>
               <input
@@ -621,8 +622,8 @@ export default function Admin({ onNavigate }) {
                 required
               />
             </div>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '4px', display: 'inline-flex', alignItems: 'center', gap: '8px' }} disabled={checking}>
-              {checking ? 'Checking…' : 'Unlock Dashboard'} {!checking && <BackIcon size={16} style={{ transform: 'rotate(180deg)', display: 'inline-block' }} />}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '4px' }} disabled={checking}>
+              {checking ? 'Checking…' : 'Unlock Dashboard'}
             </button>
           </form>
         </div>
@@ -632,11 +633,9 @@ export default function Admin({ onNavigate }) {
 
   const totalEpisodesCount = dramas.reduce((acc, curr) => acc + parseInt(curr.episodeCount || 0, 10), 0);
   const totalViewsCount = dramas.reduce((acc, curr) => acc + parseInt(curr.views || 0, 10), 0);
-  const trendingCount = dramas.filter(d => d.trending).length;
-
   return (
     <>
-      <div className="admin-layout page-enter" style={{ padding: '24px 64px' }}>
+      <div className="admin-layout page-enter">
         {toast.show && (
           <div className={`toast ${toast.type} show`} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {toast.type === 'success' && <CheckIcon size={20} />}
@@ -647,69 +646,72 @@ export default function Admin({ onNavigate }) {
         )}
 
         {/* Header */}
-        <div className="admin-header" style={{ marginBottom: '32px' }}>
+        <div className="admin-header">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
             <div>
-              <h1 className="admin-title" style={{ fontSize: '2.2rem', fontWeight: 800 }}>Admin Dashboard</h1>
-              <p className="admin-subtitle">Manage Mekong Movie content — dramas, episodes, categories, and payment settings</p>
+              <h1 className="admin-title">Admin Dashboard</h1>
+              <p className="admin-subtitle">
+                Manage Mekong Movie content — dramas, episodes, categories, and payment settings
+                {loadingDashboard && <span style={{ display: 'block', marginTop: '4px', color: 'var(--text-tertiary)' }}>Refreshing data...</span>}
+              </p>
             </div>
-            <button className="btn btn-ghost btn-sm" onClick={handleLogout} style={{ borderRadius: 'var(--r-sm)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              <BackIcon size={14} /> Logout
+            <button className="btn btn-ghost btn-sm" onClick={handleLogout}>
+              Logout
             </button>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="admin-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-          <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
-            <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{dramas.length}</div>
-            <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Dramas</div>
+        <div className="admin-stats">
+          <div className="stat-card">
+            <div className="stat-value">{dramas.length}</div>
+            <div className="stat-label">Total Dramas</div>
           </div>
-          <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
-            <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{totalEpisodesCount}</div>
-            <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Episodes</div>
+          <div className="stat-card">
+            <div className="stat-value">{totalEpisodesCount}</div>
+            <div className="stat-label">Total Episodes</div>
           </div>
-          <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
-            <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{totalViewsCount >= 1000 ? (totalViewsCount / 1000).toFixed(1) + 'K' : totalViewsCount}</div>
-            <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Total Views</div>
+          <div className="stat-card">
+            <div className="stat-value">{totalViewsCount >= 1000 ? (totalViewsCount / 1000).toFixed(1) + 'K' : totalViewsCount}</div>
+            <div className="stat-label">Total Views</div>
           </div>
-          <div className="stat-card" style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)' }}>
-            <div className="stat-value" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{categories.length}</div>
-            <div className="stat-label" style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>Categories</div>
+          <div className="stat-card">
+            <div className="stat-value">{categories.length}</div>
+            <div className="stat-label">Categories</div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="admin-tabs" role="tablist" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '1px', marginBottom: '28px' }}>
+        <div className="admin-tabs" role="tablist">
           <button className={`admin-tab ${activeTab === 'dramas' ? 'active' : ''}`} onClick={() => setActiveTab('dramas')}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><LogoIcon size={14} /> Dramas</span>
+            Dramas
           </button>
           <button className={`admin-tab ${activeTab === 'episodes' ? 'active' : ''}`} onClick={() => setActiveTab('episodes')}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><PlayIcon size={14} /> Episodes</span>
+            Episodes
           </button>
           <button className={`admin-tab ${activeTab === 'categories' ? 'active' : ''}`} onClick={() => setActiveTab('categories')}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><TagIcon size={14} /> Categories</span>
+            Categories
           </button>
           <button className={`admin-tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><AdminIcon active={activeTab === 'settings'} size={14} /> Settings</span>
+            Settings
           </button>
         </div>
 
         {/* Tab Body */}
         {activeTab === 'dramas' && (
           <div id="admin-tab-body" className="page-enter">
-            <div className="admin-toolbar" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', width: '100%', marginBottom: '20px' }}>
+            <div className="admin-toolbar">
               <input
                 className="search-input"
                 type="search"
-                placeholder="🔍 Search dramas by title or genre…"
+                placeholder="Search dramas by title or genre…"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 style={{ flex: 1, minWidth: '200px' }}
               />
 
               {/* Import from URL Form */}
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 2, minWidth: '300px' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: 2, minWidth: '300px' }}>
                 <input
                   className="form-input"
                   type="url"
@@ -718,66 +720,49 @@ export default function Admin({ onNavigate }) {
                   onChange={e => setImportUrl(e.target.value)}
                   style={{ margin: 0, flex: 1 }}
                 />
-                <button className="btn btn-ghost" onClick={handleScrape} disabled={scraping} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <AdminIcon active={scraping} size={14} />
+                <button className="btn btn-ghost" onClick={handleScrape} disabled={scraping}>
                   {scraping ? 'Fetching…' : 'Fetch & Import'}
                 </button>
               </div>
 
-              <button className="btn btn-ghost" onClick={() => document.getElementById('json-upload').click()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <ShareIcon size={14} style={{ transform: 'rotate(90deg)' }} /> Upload JSON
+              <button className="btn btn-ghost" onClick={() => document.getElementById('json-upload').click()}>
+                Upload JSON
               </button>
               <input type="file" id="json-upload" accept=".json" onChange={handleJsonUpload} style={{ display: 'none' }} />
               
               {selectedDramaIds.length > 0 && (
                 <button 
-                  className="btn" 
+                  className="btn btn-danger" 
                   onClick={handleBulkDelete}
-                  style={{ 
-                    display: 'inline-flex', 
-                    alignItems: 'center', 
-                    gap: '6px', 
-                    background: '#ff4b4b', 
-                    color: 'white', 
-                    border: 'none', 
-                    padding: '8px 16px', 
-                    borderRadius: 'var(--r-sm)', 
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    boxShadow: '0 0 10px rgba(255, 75, 75, 0.2)'
-                  }}
                 >
-                  <TrashIcon size={14} /> Delete Selected ({selectedDramaIds.length})
+                  Delete Selected ({selectedDramaIds.length})
                 </button>
               )}
 
-              <button className="btn btn-primary" onClick={() => openDramaModal(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <PlusIcon size={14} /> Add Drama
+              <button className="btn btn-primary" onClick={() => openDramaModal(null)}>
+                Add Drama
               </button>
             </div>
 
             {/* Fetch & Import Progress Bar */}
             {scrapeProgress > 0 && (
-              <div style={{ width: '100%', background: 'var(--bg-card)', borderRadius: 'var(--r-lg)', padding: '16px 20px', border: '1px solid var(--border)', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.82rem', color: 'var(--text-2)' }}>
+              <div className="admin-progress">
+                <div className="admin-progress-meta">
                   <span>Importing Drama metadata &amp; episodes...</span>
-                  <span style={{ fontWeight: 'bold', color: 'var(--accent-lt)' }}>{scrapeProgress}%</span>
+                  <span>{scrapeProgress}%</span>
                 </div>
-                <div style={{ width: '100%', background: 'rgba(255,255,255,0.06)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                <div className="admin-progress-track">
                   <div
+                    className="admin-progress-fill"
                     style={{
                       width: `${scrapeProgress}%`,
-                      height: '100%',
-                      background: 'linear-gradient(to right, var(--accent-lt), var(--accent))',
-                      transition: 'width 0.3s ease',
-                      boxShadow: '0 0 12px var(--accent-glow)'
                     }}
                   ></div>
                 </div>
               </div>
             )}
 
-            <div className="admin-table-wrapper" style={{ background: 'var(--bg-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+            <div className="admin-table-wrapper">
                <table className="admin-table">
                 <thead>
                   <tr>
@@ -802,8 +787,8 @@ export default function Admin({ onNavigate }) {
                 <tbody>
                   {filteredDramas.length === 0 ? (
                     <tr>
-                      <td colSpan="8" style={{ textAlign: 'center', padding: '52px', color: 'var(--text-2)' }}>
-                        No dramas yet. Click <strong>+ Add Drama</strong> or use the Link Scraper tool above.
+                      <td colSpan="8" className="admin-empty">
+                        No dramas yet. Click <strong>Add Drama</strong> or use the Link Scraper tool above.
                       </td>
                     </tr>
                   ) : (
@@ -823,19 +808,18 @@ export default function Admin({ onNavigate }) {
                         <td style={{ fontWeight: 600, maxWidth: '220px', wordBreak: 'break-word' }}>{d.title}</td>
                         <td><span className="genre-badge">{d.genre}</span></td>
                         <td style={{ color: 'var(--text-2)' }}>{d.year || '2025'}</td>
-                        <td style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</td>
+                        <td style={{ color: 'var(--rating-gold)', fontWeight: 'bold' }}>{d.rating || '8.0'}</td>
                         <td style={{ color: 'var(--text-3)' }}>{d.views || 0}</td>
                         <td style={{ textAlign: 'right', paddingRight: '24px', position: 'relative' }}>
                           <button
-                            className="btn btn-ghost btn-sm btn-icon"
+                            className="btn btn-ghost btn-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               setActiveDropdownId(activeDropdownId === d.id ? null : d.id);
                             }}
-                            style={{ fontSize: '1.2rem', fontWeight: 'bold', width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                             title="Actions menu"
                           >
-                            ⋮
+                            More
                           </button>
                           {activeDropdownId === d.id && (
                             <>
@@ -847,82 +831,34 @@ export default function Admin({ onNavigate }) {
                               
                               {/* Actions Dropdown Content */}
                               <div
-                                style={{
-                                  position: 'absolute',
-                                  right: '24px',
-                                  top: '40px',
-                                  background: 'var(--bg-2)',
-                                  border: '1px solid var(--border)',
-                                  borderRadius: 'var(--r-sm)',
-                                  boxShadow: 'var(--shadow-lg)',
-                                  zIndex: 11,
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  minWidth: '150px',
-                                  overflow: 'hidden',
-                                  textAlign: 'left'
-                                }}
+                                className="admin-action-menu"
                               >
                                 <button
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    padding: '10px 14px',
-                                    fontSize: '0.85rem',
-                                    width: '100%',
-                                    color: 'var(--text)',
-                                    background: 'transparent',
-                                    cursor: 'pointer'
-                                  }}
                                   onClick={() => {
                                     setActiveDropdownId(null);
                                     openDramaModal(d);
                                   }}
                                   className="dropdown-action-btn"
                                 >
-                                  <EditIcon size={14} /> Edit Drama
+                                  Edit Drama
                                 </button>
                                 <button
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    padding: '10px 14px',
-                                    fontSize: '0.85rem',
-                                    width: '100%',
-                                    color: 'var(--text)',
-                                    background: 'transparent',
-                                    cursor: 'pointer'
-                                  }}
                                   onClick={() => {
                                     setActiveDropdownId(null);
                                     onNavigate(`/watch/${d.id}`);
                                   }}
                                   className="dropdown-action-btn"
                                 >
-                                  <PlayIcon size={14} /> View on Site
+                                  View on Site
                                 </button>
                                 <button
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    padding: '10px 14px',
-                                    fontSize: '0.85rem',
-                                    width: '100%',
-                                    color: 'var(--red)',
-                                    background: 'transparent',
-                                    cursor: 'pointer',
-                                    borderTop: '1px solid var(--border)'
-                                  }}
                                   onClick={() => {
                                     setActiveDropdownId(null);
                                     deleteDrama(d.id, d.title);
                                   }}
-                                  className="dropdown-action-btn"
+                                  className="dropdown-action-btn danger"
                                 >
-                                  <TrashIcon size={14} /> Delete
+                                  Delete
                                 </button>
                               </div>
                             </>
@@ -937,7 +873,7 @@ export default function Admin({ onNavigate }) {
 
             {/* Pagination Controls */}
             {filteredDramas.length > 20 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '0 8px', flexWrap: 'wrap', gap: '12px' }}>
+              <div className="admin-pagination">
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-2)' }}>
                   Showing {startIndex + 1} to {Math.min(startIndex + 20, filteredDramas.length)} of {filteredDramas.length} dramas
                 </span>
@@ -955,7 +891,7 @@ export default function Admin({ onNavigate }) {
                       key={page}
                       className={`btn btn-sm ${currentPage === page ? 'btn-primary' : 'btn-ghost'}`}
                       onClick={() => setCurrentPage(page)}
-                      style={{ minWidth: '32px', height: '32px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0', borderRadius: 'var(--r-sm)' }}
+                      style={{ minWidth: '32px', padding: '0' }}
                     >
                       {page}
                     </button>
@@ -977,15 +913,15 @@ export default function Admin({ onNavigate }) {
         {activeTab === 'episodes' && (
           <div id="admin-tab-body" className="page-enter">
             {dramas.length === 0 ? (
-              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-2)' }}>
+              <div className="admin-empty">
                 No dramas found.{' '}
                 <button className="btn btn-link" onClick={() => setActiveTab('dramas')} style={{ color: 'var(--accent-lt)', textDecoration: 'underline' }}>
-                  Add a drama first →
+                  Add a drama first
                 </button>
               </div>
             ) : (
               <>
-                <div className="admin-toolbar" style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                <div className="admin-toolbar">
                   <select
                     className="search-input"
                     value={activeDramaId || ''}
@@ -996,15 +932,15 @@ export default function Admin({ onNavigate }) {
                       <option key={d.id} value={d.id}>{d.title}</option>
                     ))}
                   </select>
-                  <button className="btn btn-primary" onClick={() => openEpisodeModal(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <PlusIcon size={14} /> Add Episode
+                  <button className="btn btn-primary" onClick={() => openEpisodeModal(null)}>
+                    Add Episode
                   </button>
                 </div>
 
                 {loadingEpisodes ? (
                   <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-2)' }}>Loading episodes…</div>
                 ) : (
-                  <div className="admin-table-wrapper" style={{ background: 'var(--bg-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                  <div className="admin-table-wrapper">
                     <table className="admin-table">
                       <thead>
                         <tr>
@@ -1019,7 +955,7 @@ export default function Admin({ onNavigate }) {
                         {!activeDramaDetails || !activeDramaDetails.episodes || activeDramaDetails.episodes.length === 0 ? (
                           <tr>
                             <td colSpan="5" style={{ textAlign: 'center', padding: '48px', color: 'var(--text-2)' }}>
-                              No episodes yet. Click <strong>+ Add Episode</strong> to get started.
+                              No episodes yet. Click <strong>Add Episode</strong> to get started.
                             </td>
                           </tr>
                         ) : (
@@ -1033,17 +969,17 @@ export default function Admin({ onNavigate }) {
                                 </span>
                               </td>
                               <td>
-                                <span style={{ fontSize: '0.72rem', padding: '2px 9px', background: 'var(--bg-3)', borderRadius: '100px', color: 'var(--text-2)' }}>
+                                <span className="status-badge">
                                   {Embed.getType(ep.videoUrl)}
                                 </span>
                               </td>
                               <td>
                                 <div className="table-actions">
-                                  <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openEpisodeModal(ep)} title="Edit" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <EditIcon size={14} />
+                                  <button className="btn btn-ghost btn-sm" onClick={() => openEpisodeModal(ep)}>
+                                    Edit
                                   </button>
-                                  <button className="btn btn-ghost btn-sm btn-icon" onClick={() => deleteEpisode(ep.id, ep.title)} title="Delete" style={{ color: 'var(--red)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <TrashIcon size={14} />
+                                  <button className="btn btn-danger btn-sm" onClick={() => deleteEpisode(ep.id, ep.title)}>
+                                    Delete
                                   </button>
                                 </div>
                               </td>
@@ -1062,9 +998,9 @@ export default function Admin({ onNavigate }) {
         {activeTab === 'categories' && (
           <div id="admin-tab-body" className="page-enter" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '30px', maxWidth: '1200px' }}>
             {/* Column 1: Manage Categories List */}
-            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Manage Movie Categories</h2>
-              <p style={{ color: 'var(--text-2)', fontSize: '0.85rem', marginBottom: '24px' }}>
+            <div className="admin-panel">
+              <h2 className="admin-panel-title">Manage Movie Categories</h2>
+              <p className="admin-panel-copy">
                 Add, remove, and sort categories. Make sure to click <strong>Save Categories</strong> to apply changes to the website filters.
               </p>
 
@@ -1077,7 +1013,7 @@ export default function Admin({ onNavigate }) {
                   <div style={{ marginBottom: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                       <span style={{ fontSize: '0.85rem', color: 'var(--text-2)', fontWeight: 600 }}>
-                        📋 Quick Add from Dramas ({suggestedGenres.length} available)
+                        Quick Add from Dramas ({suggestedGenres.length} available)
                       </span>
                       {suggestedGenres.length > 1 && (
                         <button
@@ -1088,13 +1024,13 @@ export default function Admin({ onNavigate }) {
                           }}
                           style={{ fontSize: '0.8rem', padding: '4px 12px' }}
                         >
-                          + Add All ({suggestedGenres.length})
+                          Add All ({suggestedGenres.length})
                         </button>
                       )}
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                       {suggestedGenres.length === 0 ? (
-                        <span style={{ fontSize: '0.82rem', color: 'var(--text-3)', fontStyle: 'italic' }}>All drama genres are already added ✓</span>
+                        <span style={{ fontSize: '0.82rem', color: 'var(--text-3)', fontStyle: 'italic' }}>All drama genres are already added.</span>
                       ) : (
                         suggestedGenres.map(genre => (
                           <button
@@ -1114,7 +1050,7 @@ export default function Admin({ onNavigate }) {
                               transition: 'all 0.2s ease'
                             }}
                           >
-                            + {genre}
+                            {genre}
                           </button>
                         ))
                       )}
@@ -1133,8 +1069,8 @@ export default function Admin({ onNavigate }) {
                   onKeyDown={e => { if (e.key === 'Enter') handleAddCategory(); }}
                   style={{ margin: 0 }}
                 />
-                <button className="btn btn-primary" onClick={handleAddCategory} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <PlusIcon size={14} /> Add
+                <button className="btn btn-primary" onClick={handleAddCategory}>
+                  Add
                 </button>
               </div>
 
@@ -1171,16 +1107,15 @@ export default function Admin({ onNavigate }) {
                 )}
               </div>
 
-              <button className="btn btn-primary" onClick={handleSaveCategories} disabled={savingCategories} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                <CheckIcon size={14} />
+              <button className="btn btn-primary" onClick={handleSaveCategories} disabled={savingCategories}>
                 {savingCategories ? 'Saving…' : 'Save Categories'}
               </button>
             </div>
 
             {/* Column 2: Bulk Assign Dramas to Categories */}
-            <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px', display: 'flex', flexDirection: 'column' }}>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>Assign Dramas to Category</h2>
-              <p style={{ color: 'var(--text-2)', fontSize: '0.85rem', marginBottom: '24px' }}>
+            <div className="admin-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <h2 className="admin-panel-title">Assign Dramas to Category</h2>
+              <p className="admin-panel-copy">
                 Select a category and easily assign or remove multiple dramas by checking their boxes.
               </p>
 
@@ -1204,7 +1139,7 @@ export default function Admin({ onNavigate }) {
                 <input
                   className="search-input"
                   type="search"
-                  placeholder="🔍 Search dramas to assign..."
+                  placeholder="Search dramas to assign..."
                   value={categoryDramaSearchQuery}
                   onChange={e => setCategoryDramaSearchQuery(e.target.value)}
                   style={{ width: '100%', margin: 0 }}
@@ -1223,8 +1158,8 @@ export default function Admin({ onNavigate }) {
                 marginBottom: '24px'
               }}>
                 {(() => {
-                  const filtered = dramas.filter(d => 
-                    d.title.toLowerCase().includes(categoryDramaSearchQuery.toLowerCase())
+                  const filtered = dramas.filter(d =>
+                    (d.title || '').toLowerCase().includes(categoryDramaSearchQuery.toLowerCase())
                   );
                   if (filtered.length === 0) {
                     return <div style={{ color: 'var(--text-3)', fontSize: '0.9rem', textAlign: 'center', padding: '40px 0' }}>No dramas found.</div>;
@@ -1279,7 +1214,7 @@ export default function Admin({ onNavigate }) {
                 disabled={savingAssignments || !selectedCategoryForAssign}
                 style={{ width: '100%', justifyContent: 'center' }}
               >
-                <CheckIcon size={14} /> {savingAssignments ? 'Saving Assignments...' : 'Save Assignments'}
+                {savingAssignments ? 'Saving Assignments...' : 'Save Assignments'}
               </button>
             </div>
           </div>
@@ -1290,13 +1225,13 @@ export default function Admin({ onNavigate }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', maxWidth: '950px' }}>
               
               {/* Sponsor QR Settings */}
-              <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
-                <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '4px' }}>☕ Sponsor QR Code</h2>
-                <p style={{ color: 'var(--text-2)', fontSize: '0.82rem', marginBottom: '20px' }}>
+              <div className="admin-panel">
+                <h2 className="admin-panel-title">Sponsor QR Code</h2>
+                <p className="admin-panel-copy">
                   Paste the URL of your payment QR code (e.g. ABA Pay, ACLEDA, or any public image URL) to show on the watch page.
                 </p>
 
-                <form onSubmit={handleSaveSponsorQr} novalidate>
+                <form onSubmit={handleSaveSponsorQr} noValidate>
                   <div className="form-group" style={{ marginBottom: '16px' }}>
                     <label className="form-label">Sponsor QR Code Image URL</label>
                     <input
@@ -1329,21 +1264,20 @@ export default function Admin({ onNavigate }) {
                     </div>
                   )}
 
-                  <button type="submit" className="btn btn-primary" disabled={savingSponsorQr} style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    <CheckIcon size={14} />
+                  <button type="submit" className="btn btn-primary" disabled={savingSponsorQr} style={{ width: '100%' }}>
                     {savingSponsorQr ? 'Saving…' : 'Save QR Code'}
                   </button>
                 </form>
               </div>
 
               {/* Change Password Form */}
-              <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
-                <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '4px' }}>🔑 Update Password</h2>
-                <p style={{ color: 'var(--text-2)', fontSize: '0.82rem', marginBottom: '20px' }}>
+              <div className="admin-panel">
+                <h2 className="admin-panel-title">Update Password</h2>
+                <p className="admin-panel-copy">
                   Change your dashboard entry password. Make sure to choose a secure password.
                 </p>
 
-                <form onSubmit={handleUpdatePassword} novalidate>
+                <form onSubmit={handleUpdatePassword} noValidate>
                   <div className="form-group" style={{ marginBottom: '16px' }}>
                     <label className="form-label">Current Password</label>
                     <input
@@ -1377,8 +1311,7 @@ export default function Admin({ onNavigate }) {
                       required
                     />
                   </div>
-                  <button type="submit" className="btn btn-primary" disabled={updatingPassword} style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    <CheckIcon size={14} />
+                  <button type="submit" className="btn btn-primary" disabled={updatingPassword} style={{ width: '100%' }}>
                     {updatingPassword ? 'Updating Password…' : 'Change Password'}
                   </button>
                 </form>
@@ -1394,10 +1327,10 @@ export default function Admin({ onNavigate }) {
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal-box modal-lg">
             <div className="modal-header">
-              <h3>{editingDrama ? '✏️ Edit Drama' : '+ New Drama'}</h3>
-              <button className="modal-close" onClick={() => setDramaModalOpen(false)}>✕</button>
+              <h3>{editingDrama ? 'Edit Drama' : 'New Drama'}</h3>
+              <button className="modal-close" onClick={() => setDramaModalOpen(false)}>x</button>
             </div>
-            <form onSubmit={saveDrama} novalidate>
+            <form onSubmit={saveDrama} noValidate>
               <div className="form-group">
                 <label className="form-label" htmlFor="f-title">Title *</label>
                 <input
@@ -1506,13 +1439,13 @@ export default function Admin({ onNavigate }) {
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal-box">
             <div className="modal-header">
-              <h3>{editingEpisode ? '✏️ Edit Episode' : '+ Add Episode'}</h3>
-              <button className="modal-close" onClick={() => setEpisodeModalOpen(false)}>✕</button>
+              <h3>{editingEpisode ? 'Edit Episode' : 'Add Episode'}</h3>
+              <button className="modal-close" onClick={() => setEpisodeModalOpen(false)}>x</button>
             </div>
             <p style={{ color: 'var(--text-2)', fontSize: '0.82rem', marginBottom: '20px' }}>
               Drama: <strong style={{ color: 'var(--text)' }}>{activeDramaName}</strong>
             </p>
-            <form onSubmit={saveEpisode} novalidate>
+            <form onSubmit={saveEpisode} noValidate>
               <div className="form-group">
                 <label className="form-label" htmlFor="ep-title">Episode Title *</label>
                 <input
@@ -1555,7 +1488,7 @@ export default function Admin({ onNavigate }) {
         <Modal
           isOpen={showScrapePreviewModal}
           onClose={() => setShowScrapePreviewModal(false)}
-          title="📥 ជ្រើសរើសភាពយន្តដើម្បីទាញយក (Scrape Preview)"
+          title="ជ្រើសរើសភាពយន្តដើម្បីទាញយក"
           size="md"
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '75vh' }}>
@@ -1647,7 +1580,7 @@ export default function Admin({ onNavigate }) {
                             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         ) : (
-                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🎬</div>
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--text-3)' }}>No poster</div>
                         )}
                         <span style={{
                           position: 'absolute',
