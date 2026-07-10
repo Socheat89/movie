@@ -1,9 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { API } from '../api';
 import { updateSeo } from '../seo';
-import { PlayIcon, HeartIcon, SearchIcon, CloseIcon } from '../components/AnimatedIcons';
+import {
+  Button,
+  MovieCard,
+  Card,
+  CardHeader,
+  CardContent,
+  NavBar,
+  TabBar,
+  SearchBar,
+  FilterChips,
+  SectionHeader,
+  Skeleton,
+  Badge,
+  Modal,
+} from '../components/ui';
+import { PlayIcon, HeartIcon, SearchIcon, CloseIcon, HomeIcon, BookmarkIcon, UserIcon, StarFillIcon } from '../components/AnimatedIcons';
 
-export default function Home({ onNavigate, initialSection }) {
+export default function Home({ onNavigate, initialSection, onShowInstall }) {
   const [dramas, setDramas] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,13 +28,7 @@ export default function Home({ onNavigate, initialSection }) {
 
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(9);
-
-  useEffect(() => {
-    setVisibleCount(9);
-  }, [selectedGenre, searchQuery]);
-
-  // Search Input Ref
+  const [visibleCount, setVisibleCount] = useState(12);
   const searchInputRef = useRef(null);
 
   // Favorites Local State
@@ -34,6 +43,10 @@ export default function Home({ onNavigate, initialSection }) {
 
   const showOnlyFavorites = initialSection === 'favorites';
   const showOnlySearch = initialSection === 'search';
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [selectedGenre, searchQuery]);
 
   useEffect(() => {
     if (showOnlySearch && searchInputRef.current) {
@@ -64,14 +77,14 @@ export default function Home({ onNavigate, initialSection }) {
 
   useEffect(() => {
     updateSeo({
-      title: 'Khmer Movie | មើលភាពយន្តខ្មែរ ដោយឥតគិតថ្លៃ | DramaStream',
-      description: 'មើលភាពយន្តខ្មែរ រឿងកូរ៉េ រឿងចិន រឿងថៃ ដោយឥតគិតថ្លៃ — Khmer Movie, Korean Drama, Chinese Drama, Thai Series. Watch free online, no login required.',
-      keywords: 'khmer movie, ភាពយន្តខ្មែរ, movie, រឿងខ្មែរ, korean drama, k-drama, រឿងកូរ៉េ, chinese movie, thai movie, watch movie free, drama online, streaming free, DramaStream',
+      title: 'Khmer Movie | មើលភាពយន្តខ្មែរ ដោយឥតគិតថ្លៃ | Mekong Movie',
+      description: 'មើលភាពយន្តខ្មែរ រឿងកូរ៉េ រឿងចិន ដោយឥតគិតថ្លៃ — Khmer Movie, Korean Drama, Chinese Drama, Thai Series. Watch free online, no login required.',
+      keywords: 'khmer movie, ភាពយន្តខ្មែរ, movie, រឿងខ្មែរ, korean drama, k-drama, រឿងកូរ៉េ, chinese movie, thai movie, watch movie free, drama online, streaming free, Mekong Movie',
       url: 'https://movie.mekongcyberunit.app/',
       schema: {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        "name": "DramaStream — Khmer Movie",
+        "name": "Mekong Movie — Khmer Movie",
         "alternateName": ["ភាពយន្តខ្មែរ", "Khmer Movie", "Movie Online Free"],
         "url": "https://movie.mekongcyberunit.app/",
         "description": "មើលភាពយន្តខ្មែរ រឿងកូរ៉េ រឿងចិន ដោយឥតគិតថ្លៃ",
@@ -128,19 +141,22 @@ export default function Home({ onNavigate, initialSection }) {
   if (loading) {
     return (
       <div className="page-enter">
-        <div className="skeleton sk-hero"></div>
+        <div className="hero-section" style={{ minHeight: '70vh' }}>
+          <Skeleton variant="hero" />
+        </div>
         <div className="content-section">
-          <div className="genre-filters" style={{ marginBottom: '36px' }}>
-            {Array(7).fill(0).map((_, i) => (
-              <span key={i} className="skeleton sk-pill" style={{ margin: '4px' }}></span>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: 'var(--space-5)' }}>
+            {Array(6).fill(0).map((_, i) => (
+              <Skeleton key={i} variant="text" width="70px" style={{ height: '28px', borderRadius: 'var(--radius-full)' }} />
             ))}
           </div>
           <div className="dramas-grid">
-            {Array(10).fill(0).map((_, i) => (
-              <div key={i}>
-                <div className="skeleton sk-poster"></div>
-                <div className="skeleton sk-text"></div>
-                <div className="skeleton sk-text-s"></div>
+            {Array(12).fill(0).map((_, i) => (
+              <div key={i} style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
+                <Skeleton variant="poster" />
+                <div style={{ padding: '10px' }}>
+                  <Skeleton variant="text" count={1} />
+                </div>
               </div>
             ))}
           </div>
@@ -151,102 +167,51 @@ export default function Home({ onNavigate, initialSection }) {
 
   if (error) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center', padding: '40px' }}>
-        <div style={{ fontSize: '3rem', opacity: 0.3, marginBottom: '16px' }}>⚠️</div>
-        <h2 style={{ fontWeight: 700, marginBottom: '8px' }}>Cannot connect to server</h2>
-        <p style={{ color: 'var(--text-2)', fontSize: '0.9rem', marginBottom: '24px' }}>
-          Make sure the Laravel backend is running.
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center', padding: 'var(--space-8)' }}>
+        <div style={{ fontSize: '3rem', opacity: 0.2, marginBottom: 'var(--space-4)' }}>⚠️</div>
+        <h2 style={{ font: 'var(--style-title-2)', marginBottom: 'var(--space-2)', letterSpacing: 'var(--tracking-tight)' }}>Cannot connect to server</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: 'var(--space-6)' }}>
+          Make sure the backend is running.
         </p>
-        <button className="btn btn-primary" onClick={() => window.location.reload()}>↺ Retry</button>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
       </div>
     );
   }
 
-  // --- MOBILE ONLY SECTIONS ---
-
-  // 1. Favorites tab view on Mobile
+  // --- FAVORITES TAB ---
   if (showOnlyFavorites) {
+    const favDramas = dramas.filter(d => favorites.includes(d.id));
     return (
       <div className="page-enter">
-        <section className="content-section" style={{ paddingTop: '10px' }}>
-          <div className="section-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 className="section-title">My <span>Favorites</span></h2>
-            <span style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>{favorites.length} saved</span>
-          </div>
+        <section className="content-section" style={{ paddingTop: 'var(--space-5)' }}>
+          <h2 style={{ font: 'var(--style-title-1)', letterSpacing: 'var(--tracking-tight)', marginBottom: 'var(--space-1)' }}>
+            Favorites
+          </h2>
+          <p style={{ color: 'var(--text-tertiary)', fontSize: '15px', marginBottom: 'var(--space-6)' }}>
+            {favorites.length} saved
+          </p>
 
           {favorites.length === 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', textAlign: 'center', padding: '40px 20px' }}>
-              <div style={{ position: 'relative', marginBottom: '20px' }}>
-                <HeartIcon active={true} size={54} />
-              </div>
-              <h3 style={{ fontWeight: 700, marginBottom: '10px', fontSize: '1.25rem' }}>Your list is empty</h3>
-              <p style={{ color: 'var(--text-2)', fontSize: '0.9rem', maxWidth: '320px', marginBottom: '28px', lineHeight: 1.6 }}>
-                Save dramas to this list by tapping the heart icon on any movie poster.
+            <div style={{ textAlign: 'center', padding: 'var(--space-16) var(--space-6)' }}>
+              <HeartIcon active={true} size={48} style={{ marginBottom: 'var(--space-4)', opacity: 0.4 }} />
+              <h3 style={{ font: 'var(--style-title-3)', marginBottom: 'var(--space-2)', letterSpacing: 'var(--tracking-tight)' }}>Your list is empty</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '15px', maxWidth: '300px', margin: '0 auto var(--space-6)', lineHeight: 1.55 }}>
+                Save movies by tapping the heart icon on any poster.
               </p>
-              <button className="btn btn-primary" style={{ padding: '12px 28px' }} onClick={() => onNavigate('/')}>Discover Dramas</button>
+              <Button onClick={() => onNavigate('/')} size="lg">Discover Movies</Button>
             </div>
           ) : (
-            <div className="dramas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: '16px' }}>
-              {dramas.filter(d => favorites.includes(d.id)).map((d) => (
-                <article
+            <div className="dramas-grid">
+              {favDramas.map((d) => (
+                <MovieCard
                   key={d.id}
-                  className="drama-card"
+                  movie={d}
+                  variant="poster"
                   onClick={() => onNavigate(`/watch/${d.id}`)}
-                  role="button"
-                  tabIndex="0"
-                  style={{ cursor: 'pointer', background: 'transparent' }}
-                >
-                  <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', aspectRatio: '2/3', marginBottom: '12px', border: '1px solid var(--border)' }}>
-                    <img
-                      className="drama-card-poster loaded"
-                      src={d.poster}
-                      alt={d.title}
-                      loading="lazy"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={(e) => {
-                        e.target.src = `https://picsum.photos/seed/${d.id}/300/450`;
-                      }}
-                    />
-                    <button
-                      onClick={(e) => toggleFavorite(d.id, e)}
-                      style={{
-                        position: 'absolute',
-                        top: '12px',
-                        right: '12px',
-                        zIndex: 3,
-                        background: 'rgba(8, 8, 14, 0.65)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '50%',
-                        width: '36px',
-                        height: '36px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s ease'
-                      }}
-                      className="fav-heart-btn"
-                    >
-                      <HeartIcon active={true} size={18} />
-                    </button>
-                    <div className="drama-card-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
-                      <PlayIcon size={40} />
-                    </div>
-                  </div>
-                  <div className="drama-card-info" style={{ padding: '0 4px' }}>
-                    <h3 className="drama-card-title" style={{ fontSize: '0.92rem', fontWeight: 600, marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text)' }}>
-                      {d.title}
-                    </h3>
-                    <div className="drama-card-meta" style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.76rem', color: 'var(--text-2)' }}>
-                      <span>{d.year || '2025'}</span>
-                      <span>·</span>
-                      <span style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</span>
-                      <span>·</span>
-                      <span style={{ color: 'var(--text-3)' }}>{d.episodeCount || 0} EPs</span>
-                    </div>
-                  </div>
-                </article>
+                  onFavorite={toggleFavorite}
+                  isFavorite={true}
+                  showOverlay={true}
+                />
               ))}
             </div>
           )}
@@ -255,138 +220,66 @@ export default function Home({ onNavigate, initialSection }) {
     );
   }
 
-  // 2. Search tab view on Mobile
+  // --- SEARCH TAB ---
   if (showOnlySearch) {
     return (
       <div className="page-enter">
-        <section className="content-section" style={{ paddingTop: '10px' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <h2 className="section-title" style={{ marginBottom: '16px' }}>Search <span>Dramas</span></h2>
-            <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '100px', padding: '8px 20px', width: '100%' }}>
-              <SearchIcon active={true} size={20} style={{ marginRight: '8px', flexShrink: 0 }} />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search title, genre, or year..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text)',
-                  outline: 'none',
-                  fontSize: '0.94rem',
-                  width: '100%',
-                  margin: 0,
-                  padding: '6px 0'
-                }}
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  style={{ color: 'var(--text-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: '4px', flexShrink: 0 }}
-                >
-                  <CloseIcon size={16} />
-                </button>
-              )}
-            </div>
-          </div>
+        <section className="content-section" style={{ paddingTop: 'var(--space-5)' }}>
+          <h2 style={{ font: 'var(--style-title-1)', letterSpacing: 'var(--tracking-tight)', marginBottom: 'var(--space-4)' }}>
+            Search
+          </h2>
+          <SearchBar
+            ref={searchInputRef}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(typeof e === 'string' ? e : e.target.value)}
+            onClear={() => setSearchQuery('')}
+            placeholder="Movies, genres, years..."
+            autoFocus
+            showCancel
+            onCancel={() => onNavigate('/')}
+            style={{ marginBottom: 'var(--space-5)' }}
+          />
 
           {/* Genre Filters */}
-          <div className="genre-filters" role="group" aria-label="Filter by genre" style={{ marginBottom: '24px' }}>
-            {['All', ...categories].map((cat) => (
-              <button
-                key={cat}
-                className={`genre-pill ${selectedGenre === cat ? 'active' : ''}`}
-                onClick={() => setSelectedGenre(cat)}
-                aria-selected={selectedGenre === cat}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          <FilterChips
+            options={['All', ...categories].map(cat => ({ label: cat, value: cat }))}
+            selected={selectedGenre}
+            onChange={setSelectedGenre}
+          />
 
           {/* Search Results */}
-          <div className="dramas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: '16px' }}>
+          <div className="dramas-grid">
             {filteredDramas.length === 0 ? (
-              <div className="no-results" style={{ gridColumn: '1/-1', padding: '60px 20px', textAlign: 'center' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '16px', opacity: 0.35 }}>🔍</div>
-                <h3 style={{ fontWeight: 700, marginBottom: '8px' }}>No matches found</h3>
-                <p style={{ color: 'var(--text-2)', fontSize: '0.88rem' }}>Try refining your keywords or choosing another category.</p>
+              <div className="no-results" style={{ gridColumn: '1/-1', padding: 'var(--space-16) var(--space-6)' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: 'var(--space-4)', opacity: 0.2 }}>🔍</div>
+                <h3 style={{ font: 'var(--style-title-3)', marginBottom: 'var(--space-2)', letterSpacing: 'var(--tracking-tight)' }}>No matches found</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>Try different keywords or another category.</p>
               </div>
             ) : (
               filteredDramas.slice(0, visibleCount).map((d) => (
-                <article
+                <MovieCard
                   key={d.id}
-                  className="drama-card"
+                  movie={d}
+                  variant="poster"
                   onClick={() => onNavigate(`/watch/${d.id}`)}
-                  role="button"
-                  tabIndex="0"
-                  style={{ cursor: 'pointer', background: 'transparent' }}
-                >
-                  <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', aspectRatio: '2/3', marginBottom: '12px', border: '1px solid var(--border)' }}>
-                    <img
-                      className="drama-card-poster loaded"
-                      src={d.poster}
-                      alt={d.title}
-                      loading="lazy"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={(e) => {
-                        e.target.src = `https://picsum.photos/seed/${d.id}/300/450`;
-                      }}
-                    />
-                    <button
-                      onClick={(e) => toggleFavorite(d.id, e)}
-                      style={{
-                        position: 'absolute',
-                        top: '12px',
-                        right: '12px',
-                        zIndex: 3,
-                        background: 'rgba(8, 8, 14, 0.65)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '50%',
-                        width: '36px',
-                        height: '36px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s ease'
-                      }}
-                      className="fav-heart-btn"
-                    >
-                      <HeartIcon active={favorites.includes(d.id)} size={18} />
-                    </button>
-                    <div className="drama-card-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
-                      <PlayIcon size={40} />
-                    </div>
-                  </div>
-                  <div className="drama-card-info" style={{ padding: '0 4px' }}>
-                    <h3 className="drama-card-title" style={{ fontSize: '0.92rem', fontWeight: 600, marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text)' }}>
-                      {d.title}
-                    </h3>
-                    <div className="drama-card-meta" style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.76rem', color: 'var(--text-2)' }}>
-                      <span>{d.year || '2025'}</span>
-                      <span>·</span>
-                      <span style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</span>
-                      <span>·</span>
-                      <span style={{ color: 'var(--text-3)' }}>{d.episodeCount || 0} EPs</span>
-                    </div>
-                  </div>
-                </article>
+                  onFavorite={toggleFavorite}
+                  isFavorite={favorites.includes(d.id)}
+                  showOverlay={true}
+                />
               ))
             )}
           </div>
+
           {visibleCount < filteredDramas.length && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
-              <button 
-                className="btn btn-primary" 
-                onClick={() => setVisibleCount(prev => prev + 9)}
-                style={{ padding: '10px 24px', fontSize: '0.85rem', borderRadius: '100px' }}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--space-8)' }}>
+              <Button
+                variant="outline"
+                onClick={() => setVisibleCount(prev => prev + 12)}
+                size="md"
+                style={{ borderRadius: 'var(--radius-full)' }}
               >
                 Load More
-              </button>
+              </Button>
             </div>
           )}
         </section>
@@ -394,159 +287,185 @@ export default function Home({ onNavigate, initialSection }) {
     );
   }
 
-  // --- REGULAR DESKTOP & HYBRID LAYOUT ---
-
+  // --- MAIN HOME LAYOUT ---
   const sliderItems = trending.slice(0, 6);
+  const isPwaInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
   return (
     <div className="page-enter">
       {/* Hero Section / Slider */}
       <section className="hero-section">
         {sliderItems.length === 0 ? (
-          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-2)' }}>
-            No trending dramas yet.
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+            No trending movies yet.
           </div>
         ) : (
-          sliderItems.map((d, i) => (
-            <div
-              key={d.id}
-              className={`hero-slide ${i === currentSlide ? 'active' : ''}`}
-              style={{ pointerEvents: i === currentSlide ? 'auto' : 'none' }}
-            >
-              <div className="hero-bg" style={{ backgroundImage: `url('${d.poster}')` }}></div>
-              <div className="hero-gradient"></div>
-              <div className="hero-content">
-                <div className="hero-badge">🔥 Trending</div>
-                <h1 className="hero-title">{d.title}</h1>
-                <p className="hero-desc">{d.description || 'No description available.'}</p>
-                <div className="hero-actions">
-                  <button className="btn btn-primary" onClick={() => onNavigate(`/watch/${d.id}`)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    <PlayIcon size={20} /> Watch Now
-                  </button>
-                  <div className="hero-meta" style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '0.88rem' }}>
-                    <span className="genre-badge">{d.genre}</span>
-                    <span>{d.year || '2025'}</span>
-                    <span style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</span>
-                    <span style={{ color: 'var(--text-3)' }}>{formatViews(d.views)}</span>
+          <>
+            {sliderItems.map((d, i) => (
+              <div
+                key={d.id}
+                className={`hero-slide ${i === currentSlide ? 'active' : ''}`}
+                style={{ pointerEvents: i === currentSlide ? 'auto' : 'none' }}
+              >
+                <div className="hero-bg" style={{ backgroundImage: `url('${d.poster}')` }}></div>
+                <div className="hero-gradient"></div>
+                <div className="hero-content">
+                  <span className="hero-badge">🔥 Trending</span>
+                  <h1 className="hero-title">{d.title}</h1>
+                  <p className="hero-desc">{(d.description || 'No description available.').replace(/\{\w+\}[^\s]*/g, '').trim() || 'No description available.'}</p>
+                  <div className="hero-actions">
+                    <Button
+                      variant="primary"
+                      leftIcon={<PlayIcon size={18} />}
+                      onClick={() => onNavigate(`/watch/${d.id}`)}
+                      size="lg"
+                      style={{ borderRadius: 'var(--radius-xl)' }}
+                    >
+                      Watch Now
+                    </Button>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', fontSize: '13px', flexWrap: 'wrap' }}>
+                      <span style={{ 
+                        padding: '4px 10px', 
+                        backgroundColor: 'rgba(229, 9, 20, 0.15)', 
+                        color: 'var(--brand-primary)',
+                        borderRadius: 'var(--radius-full)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                      }}>{d.genre}</span>
+                      <span style={{ color: 'var(--text-tertiary)' }}>{d.year || '2025'}</span>
+                      <span style={{ color: 'var(--rating-gold)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <StarFillIcon size={11} /> {d.rating || '8.0'}
+                      </span>
+                      <span style={{ color: 'var(--text-quaternary)' }}>{formatViews(d.views || 0)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
-        )}
+            ))}
 
-        {sliderItems.length > 1 && (
-          <>
-            <button
-              className="hero-arrow prev"
-              onClick={() => setCurrentSlide(prev => (prev - 1 + sliderItems.length) % sliderItems.length)}
-            >
-              ‹
-            </button>
-            <button
-              className="hero-arrow next"
-              onClick={() => setCurrentSlide(prev => (prev + 1) % sliderItems.length)}
-            >
-              ›
-            </button>
-            <div className="hero-dots">
-              {sliderItems.map((_, i) => (
+            {sliderItems.length > 1 && (
+              <>
                 <button
-                  key={i}
-                  className={`hero-dot ${i === currentSlide ? 'active' : ''}`}
-                  onClick={() => setCurrentSlide(i)}
-                  aria-label={`Slide ${i + 1}`}
-                ></button>
-              ))}
-            </div>
+                  className="hero-arrow prev"
+                  onClick={() => setCurrentSlide(prev => (prev - 1 + sliderItems.length) % sliderItems.length)}
+                  aria-label="Previous slide"
+                >
+                  ‹
+                </button>
+                <button
+                  className="hero-arrow next"
+                  onClick={() => setCurrentSlide(prev => (prev + 1) % sliderItems.length)}
+                  aria-label="Next slide"
+                >
+                  ›
+                </button>
+                <div className="hero-dots">
+                  {sliderItems.map((_, i) => (
+                    <button
+                      key={i}
+                      className={`hero-dot ${i === currentSlide ? 'active' : ''}`}
+                      onClick={() => setCurrentSlide(i)}
+                      aria-label={`Slide ${i + 1}`}
+                    ></button>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </section>
 
-      {/* Favorites Section (renders only if user has favorited items) */}
+      {/* Install App Banner */}
+      {!isPwaInstalled && (
+        <div style={{
+          maxWidth: '1400px',
+          margin: 'var(--space-4) auto 0',
+          padding: '0 var(--space-5)',
+        }}>
+          <div style={{
+            backgroundColor: 'var(--bg-secondary)',
+            borderRadius: 'var(--radius-xl)',
+            padding: 'var(--space-4) var(--space-5)',
+            border: '0.5px solid rgba(255, 255, 255, 0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 'var(--space-3)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <span style={{ fontSize: '1.8rem' }}>📱</span>
+              <div>
+                <h4 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
+                  ដំឡើងកម្មវិធីទូរស័ព្ទ Mekong Movie
+                </h4>
+                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '2px 0 0 0' }}>
+                  មើលខ្សែភាពយន្តខ្មែរបានកាន់តែលឿន និងងាយស្រួល គ្មានការទាញយកពី App Store ឡើយ។
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onShowInstall}
+              style={{ borderRadius: 'var(--radius-lg)' }}
+            >
+              ដំឡើងឥឡូវនេះ
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Favorites Section */}
       {favorites.length > 0 && (
-        <section className="content-section" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '44px', marginBottom: '8px' }}>
-          <div className="section-header" style={{ marginBottom: '24px' }}>
-            <h2 className="section-title">My <span>Favorites</span></h2>
-            <span style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>{favorites.length} saved</span>
+        <section className="content-section" style={{ borderBottom: '0.5px solid var(--border-primary)', paddingBottom: 'var(--space-8)', marginBottom: 'var(--space-2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+            <div>
+              <h2 style={{ font: 'var(--style-title-2)', letterSpacing: 'var(--tracking-tight)', margin: 0 }}>
+                My Favorites
+              </h2>
+              <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', marginTop: '2px' }}>{favorites.length} saved</p>
+            </div>
+            <span style={{ color: 'var(--color-system-blue)', fontSize: '15px', cursor: 'pointer' }}>
+              See All
+            </span>
           </div>
 
-          <div className="dramas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '24px' }}>
+          <div className="dramas-grid">
             {dramas.filter(d => favorites.includes(d.id)).map((d) => (
-              <article
+              <MovieCard
                 key={d.id}
-                className="drama-card"
+                movie={d}
+                variant="poster"
                 onClick={() => onNavigate(`/watch/${d.id}`)}
-                role="button"
-                tabIndex="0"
-                style={{ cursor: 'pointer', background: 'transparent' }}
-              >
-                <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', aspectRatio: '2/3', marginBottom: '12px', border: '1px solid var(--border)' }}>
-                  <img
-                    className="drama-card-poster loaded"
-                    src={d.poster}
-                    alt={d.title}
-                    loading="lazy"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => {
-                      e.target.src = `https://picsum.photos/seed/${d.id}/300/450`;
-                    }}
-                  />
-                  <button
-                    onClick={(e) => toggleFavorite(d.id, e)}
-                    style={{
-                      position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      zIndex: 3,
-                      background: 'rgba(8, 8, 14, 0.65)',
-                      backdropFilter: 'blur(8px)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '50%',
-                      width: '36px',
-                      height: '36px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'transform 0.2s ease'
-                    }}
-                    className="fav-heart-btn"
-                  >
-                    <HeartIcon active={true} size={18} />
-                  </button>
-                  <div className="drama-card-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
-                    <PlayIcon size={44} />
-                  </div>
-                </div>
-                <div className="drama-card-info" style={{ padding: '0 4px' }}>
-                  <h3 className="drama-card-title" style={{ fontSize: '0.96rem', fontWeight: 600, marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text)' }}>
-                    {d.title}
-                  </h3>
-                  <div className="drama-card-meta" style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', color: 'var(--text-2)' }}>
-                    <span>{d.year || '2025'}</span>
-                    <span>·</span>
-                    <span style={{ color: '#ffb800', fontWeight: 'bold' }}>★ {d.rating || '8.0'}</span>
-                    <span>·</span>
-                    <span style={{ color: 'var(--text-3)' }}>{d.episodeCount || 0} EPs</span>
-                  </div>
-                </div>
-              </article>
+                onFavorite={toggleFavorite}
+                isFavorite={true}
+                showOverlay={true}
+              />
             ))}
           </div>
         </section>
       )}
 
-      {/* Main Content Section */}
+      {/* All Movies Section */}
       <section className="content-section">
-        {/* Search Bar & Header Row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '28px' }}>
-          <div className="section-header" style={{ margin: 0 }}>
-            <h2 className="section-title">All <span>Dramas</span></h2>
-          </div>
+        {/* Header + Search */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
+          <h2 style={{ font: 'var(--style-title-2)', letterSpacing: 'var(--tracking-tight)', margin: 0 }}>
+            All Movies
+          </h2>
 
-          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '100px', padding: '6px 18px', width: '100%', maxWidth: '380px' }}>
-            <SearchIcon active={false} size={16} style={{ marginRight: '8px', color: 'var(--text-2)' }} />
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            background: 'var(--color-system-gray5)', 
+            borderRadius: 'var(--radius-lg)', 
+            padding: '0 var(--space-3)', 
+            width: '100%', 
+            maxWidth: '340px',
+            height: '36px',
+          }}>
+            <SearchIcon active={false} size={15} style={{ color: 'var(--color-system-gray)', marginRight: '6px', flexShrink: 0 }} />
             <input
               type="text"
               placeholder="Search title, genre, or year..."
@@ -555,132 +474,70 @@ export default function Home({ onNavigate, initialSection }) {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: 'var(--text)',
+                color: 'var(--text-primary)',
                 outline: 'none',
-                fontSize: '0.88rem',
+                fontSize: '15px',
                 width: '100%',
                 margin: 0,
-                padding: '4px 0'
+                padding: 0,
+                fontFamily: 'var(--font)',
               }}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                style={{ color: 'var(--text-3)', display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '0 4px' }}
+                style={{ 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '18px', height: '18px', borderRadius: '50%',
+                  backgroundColor: 'var(--color-system-gray3)', color: 'var(--color-system-gray6)',
+                  border: 'none', cursor: 'pointer', flexShrink: 0, padding: 0,
+                }}
               >
-                <CloseIcon size={14} />
+                <CloseIcon size={10} />
               </button>
             )}
           </div>
         </div>
 
         {/* Genre Filters */}
-        <div className="genre-filters" role="group" aria-label="Filter by genre">
-          {['All', ...categories].map((cat) => (
-            <button
-              key={cat}
-              className={`genre-pill ${selectedGenre === cat ? 'active' : ''}`}
-              onClick={() => setSelectedGenre(cat)}
-              aria-selected={selectedGenre === cat}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        <FilterChips
+          options={['All', ...categories].map(cat => ({ label: cat, value: cat }))}
+          selected={selectedGenre}
+          onChange={setSelectedGenre}
+        />
 
         {/* Dramas Grid */}
-        <div className="dramas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '24px' }}>
+        <div className="dramas-grid">
           {filteredDramas.length === 0 ? (
-            <div className="no-results" style={{ gridColumn: '1/-1', padding: '40px' }}>
-              <div className="no-results-icon" style={{ fontSize: '3rem', textAlign: 'center' }}>🎬</div>
-              <p style={{ textAlign: 'center', color: 'var(--text-2)' }}>No dramas found.</p>
+            <div className="no-results" style={{ gridColumn: '1/-1', padding: 'var(--space-16) var(--space-6)' }}>
+              <div style={{ fontSize: '2.5rem', textAlign: 'center', opacity: 0.2 }}>🎬</div>
+              <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '15px', marginTop: 'var(--space-3)' }}>No movies found.</p>
             </div>
           ) : (
             filteredDramas.slice(0, visibleCount).map((d) => (
-              <article
+              <MovieCard
                 key={d.id}
-                className="drama-card"
+                movie={d}
+                variant="poster"
                 onClick={() => onNavigate(`/watch/${d.id}`)}
-                role="button"
-                tabIndex="0"
-                aria-label={`Watch ${d.title}`}
-                style={{ cursor: 'pointer', background: 'transparent', transition: 'all 0.3s ease' }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onNavigate(`/watch/${d.id}`);
-                  }
-                }}
-              >
-                <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', aspectRatio: '2/3', marginBottom: '12px', border: '1px solid var(--border)' }}>
-                  <img
-                    className="drama-card-poster loaded"
-                    src={d.poster}
-                    alt={d.title}
-                    loading="lazy"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => {
-                      e.target.src = `https://picsum.photos/seed/${d.id}/300/450`;
-                    }}
-                  />
-                  
-                  {/* Floating Favorite Heart Button */}
-                  <button
-                    onClick={(e) => toggleFavorite(d.id, e)}
-                    style={{
-                      position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      zIndex: 3,
-                      background: 'rgba(8, 8, 14, 0.65)',
-                      backdropFilter: 'blur(8px)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '50%',
-                      width: '36px',
-                      height: '36px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'transform 0.2s ease, color 0.2s ease'
-                    }}
-                    className="fav-heart-btn"
-                    title={favorites.includes(d.id) ? "Remove from Favorites" : "Add to Favorites"}
-                  >
-                    <HeartIcon active={favorites.includes(d.id)} size={18} />
-                  </button>
-
-                  <div className="drama-card-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
-                    <PlayIcon size={44} />
-                  </div>
-                </div>
-                <div className="drama-card-info" style={{ padding: '0 4px' }}>
-                  <h3 className="drama-card-title" style={{ fontSize: '0.96rem', fontWeight: 600, marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text)' }}>
-                    {d.title}
-                  </h3>
-                  <div className="drama-card-meta" style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', color: 'var(--text-2)' }}>
-                    <span>{d.year || '2025'}</span>
-                    <span>·</span>
-                    <span style={{ color: '#ffb800', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                      ★ {d.rating || '8.0'}
-                    </span>
-                    <span>·</span>
-                    <span style={{ color: 'var(--text-3)' }}>{d.episodeCount || 0} EPs</span>
-                  </div>
-                </div>
-              </article>
+                onFavorite={toggleFavorite}
+                isFavorite={favorites.includes(d.id)}
+                showOverlay={true}
+              />
             ))
           )}
         </div>
+
         {visibleCount < filteredDramas.length && (
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '36px' }}>
-            <button 
-              className="btn btn-primary" 
-              onClick={() => setVisibleCount(prev => prev + 9)}
-              style={{ padding: '12px 32px', fontSize: '0.9rem', borderRadius: '100px' }}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--space-10)' }}>
+            <Button
+              variant="outline"
+              onClick={() => setVisibleCount(prev => prev + 12)}
+              size="md"
+              style={{ borderRadius: 'var(--radius-full)', padding: '0 var(--space-8)' }}
             >
               Load More
-            </button>
+            </Button>
           </div>
         )}
       </section>

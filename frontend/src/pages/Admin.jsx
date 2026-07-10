@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { API } from '../api';
 import { Embed } from '../embed';
 import { BackIcon, CloseIcon, AdminIcon, CheckIcon, InfoIcon, ErrorIcon, LogoIcon, PlayIcon, EditIcon, TrashIcon, PlusIcon, TagIcon, ShareIcon } from '../components/AnimatedIcons';
+import { Modal } from '../components/ui';
 
 export default function Admin({ onNavigate }) {
   const [authed, setAuthed] = useState(API.isAuthed());
@@ -18,6 +19,12 @@ export default function Admin({ onNavigate }) {
   const [importUrl, setImportUrl] = useState('');
   const [scraping, setScraping] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState(0);
+
+  // Bulk Scraper Preview Modal States
+  const [previewMovies, setPreviewMovies] = useState([]);
+  const [selectedPreviewUrls, setSelectedPreviewUrls] = useState([]);
+  const [selectedScrapeCategory, setSelectedScrapeCategory] = useState('');
+  const [showScrapePreviewModal, setShowScrapePreviewModal] = useState(false);
 
   // Table action dropdown state
   const [activeDropdownId, setActiveDropdownId] = useState(null);
@@ -180,6 +187,9 @@ export default function Admin({ onNavigate }) {
       showToast('Please paste a valid website URL first.', 'error');
       return;
     }
+
+    const isBulkScrape = importUrl.includes('freemovies2u.live') || importUrl.includes('khdiamond.net');
+
     setScraping(true);
     setScrapeProgress(10);
 
@@ -194,21 +204,83 @@ export default function Admin({ onNavigate }) {
     }, 350);
 
     try {
-      const res = await API.scrapeUrl(importUrl);
+      if (isBulkScrape) {
+        // Bulk Scrape Preview flow
+        const res = await API.scrapePreview(importUrl);
+        clearInterval(interval);
+        setScrapeProgress(100);
+        
+        if (!res.movies || res.movies.length === 0) {
+          showToast('No movies found on this page.', 'error');
+          return;
+        }
+
+        setPreviewMovies(res.movies);
+        // Initially select all movies
+        setSelectedPreviewUrls(res.movies.map(m => m.url));
+        // Pre-select detected category if valid, fallback to first category
+        const matchedCategory = categories.find(c => c.toLowerCase() === res.detectedCategory.toLowerCase());
+        setSelectedScrapeCategory(matchedCategory || categories[0] || 'Action');
+        
+        setShowScrapePreviewModal(true);
+      } else {
+        // Original single URL import flow
+        const res = await API.scrapeUrl(importUrl);
+        clearInterval(interval);
+        setScrapeProgress(100);
+        if (res.isBulk) {
+          showToast(`Bulk imported ${res.importedCount} dramas! 🎉`, 'success');
+        } else {
+          showToast(`Imported "${res.title}" (${res.episodeCount} episodes)! 🎉`, 'success');
+        }
+        setImportUrl('');
+        loadDashboardData();
+      }
+    } catch (err) {
+      clearInterval(interval);
+      setScrapeProgress(0);
+      console.error(err);
+      showToast('Failed to scrape: ' + (err.message || 'unknown error'), 'error');
+    } finally {
+      setScraping(false);
+      setTimeout(() => setScrapeProgress(0), 1000);
+    }
+  };
+
+  const handleImportSelected = async () => {
+    if (selectedPreviewUrls.length === 0) {
+      showToast('Please select at least one movie to import.', 'error');
+      return;
+    }
+
+    const selectedMovies = previewMovies.filter(m => selectedPreviewUrls.includes(m.url));
+    setScraping(true);
+    setScrapeProgress(5);
+    setShowScrapePreviewModal(false);
+
+    // Progress bar simulator
+    const interval = setInterval(() => {
+      setScrapeProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(interval);
+          return 95;
+        }
+        return prev + 3;
+      });
+    }, 400);
+
+    try {
+      const res = await API.scrapeImport(selectedMovies, selectedScrapeCategory);
       clearInterval(interval);
       setScrapeProgress(100);
-      if (res.isBulk) {
-        showToast(`Bulk imported ${res.importedCount} dramas! 🎉`, 'success');
-      } else {
-        showToast(`Imported "${res.title}" (${res.episodeCount} episodes)! 🎉`, 'success');
-      }
+      showToast(`Imported ${res.importedCount} movies into "${selectedScrapeCategory}" category! 🎉`, 'success');
       setImportUrl('');
       loadDashboardData();
     } catch (err) {
       clearInterval(interval);
       setScrapeProgress(0);
       console.error(err);
-      showToast('Failed to scrape: ' + (err.message || 'unknown error'), 'error');
+      showToast('Failed to import: ' + (err.message || 'unknown error'), 'error');
     } finally {
       setScraping(false);
       setTimeout(() => setScrapeProgress(0), 1000);
@@ -558,8 +630,8 @@ export default function Admin({ onNavigate }) {
     );
   }
 
-  const totalEpisodesCount = dramas.reduce((acc, curr) => acc + (curr.episodeCount || 0), 0);
-  const totalViewsCount = dramas.reduce((acc, curr) => acc + (curr.views || 0), 0);
+  const totalEpisodesCount = dramas.reduce((acc, curr) => acc + parseInt(curr.episodeCount || 0, 10), 0);
+  const totalViewsCount = dramas.reduce((acc, curr) => acc + parseInt(curr.views || 0, 10), 0);
   const trendingCount = dramas.filter(d => d.trending).length;
 
   return (
@@ -579,7 +651,7 @@ export default function Admin({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
             <div>
               <h1 className="admin-title" style={{ fontSize: '2.2rem', fontWeight: 800 }}>Admin Dashboard</h1>
-              <p className="admin-subtitle">Manage DramaStream content — dramas, episodes, categories, and payment settings</p>
+              <p className="admin-subtitle">Manage Mekong Movie content — dramas, episodes, categories, and payment settings</p>
             </div>
             <button className="btn btn-ghost btn-sm" onClick={handleLogout} style={{ borderRadius: 'var(--r-sm)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
               <BackIcon size={14} /> Logout
@@ -1477,6 +1549,158 @@ export default function Admin({ onNavigate }) {
             </form>
           </div>
         </div>
+      )}
+      {/* Bulk Scraper Movie Preview & Select Modal */}
+      {showScrapePreviewModal && (
+        <Modal
+          isOpen={showScrapePreviewModal}
+          onClose={() => setShowScrapePreviewModal(false)}
+          title="📥 ជ្រើសរើសភាពយន្តដើម្បីទាញយក (Scrape Preview)"
+          size="md"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '75vh' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-2)' }}>ជ្រើសរើស Category:</span>
+                <select
+                  className="form-input"
+                  value={selectedScrapeCategory}
+                  onChange={e => setSelectedScrapeCategory(e.target.value)}
+                  style={{ margin: 0, width: '180px', height: '36px', padding: '0 10px', fontSize: '13px' }}
+                >
+                  {categories.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setSelectedPreviewUrls(previewMovies.map(m => m.url))}
+                  style={{ padding: '6px 12px', fontSize: '12px' }}
+                >
+                  Select All
+                </button>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setSelectedPreviewUrls([])}
+                  style={{ padding: '6px 12px', fontSize: '12px' }}
+                >
+                  Deselect All
+                </button>
+              </div>
+            </div>
+
+            {/* Movies List Scroll Grid */}
+            <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '16px', background: 'rgba(0,0,0,0.15)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '16px' }}>
+                {previewMovies.map(movie => {
+                  const isChecked = selectedPreviewUrls.includes(movie.url);
+                  return (
+                    <div
+                      key={movie.url}
+                      onClick={() => {
+                        setSelectedPreviewUrls(prev =>
+                          isChecked ? prev.filter(u => u !== movie.url) : [...prev, movie.url]
+                        );
+                      }}
+                      style={{
+                        position: 'relative',
+                        cursor: 'pointer',
+                        borderRadius: 'var(--r-md)',
+                        overflow: 'hidden',
+                        border: isChecked ? '2px solid var(--accent)' : '2px solid transparent',
+                        background: 'var(--bg-card)',
+                        transition: 'all 0.2s ease',
+                        boxShadow: isChecked ? '0 0 10px rgba(0, 122, 255, 0.2)' : 'none',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}
+                    >
+                      {/* Checkbox overlay indicator */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '8px',
+                        left: '8px',
+                        zIndex: 10,
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(255,255,255,0.4)',
+                        background: isChecked ? 'var(--accent)' : 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                      }}>
+                        {isChecked && '✓'}
+                      </div>
+
+                      {/* Poster */}
+                      <div style={{ position: 'relative', width: '100%', paddingTop: '150%', background: 'var(--border)' }}>
+                        {movie.poster ? (
+                          <img
+                            src={movie.poster}
+                            alt={movie.title}
+                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🎬</div>
+                        )}
+                        <span style={{
+                          position: 'absolute',
+                          bottom: '6px',
+                          right: '6px',
+                          background: 'rgba(0,0,0,0.7)',
+                          color: '#fff',
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontWeight: 600
+                        }}>
+                          {movie.year}
+                        </span>
+                      </div>
+
+                      {/* Info */}
+                      <div style={{ padding: '8px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                        <p style={{
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          margin: 0,
+                          color: 'var(--text)',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          lineHeight: 1.3,
+                          maxHeight: '2.6em'
+                        }}>
+                          {movie.title}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+              <button className="btn btn-ghost" onClick={() => setShowScrapePreviewModal(false)}>Cancel</button>
+              <button
+                className="btn btn-primary"
+                onClick={handleImportSelected}
+                disabled={selectedPreviewUrls.length === 0}
+                style={{ borderRadius: 'var(--r-md)' }}
+              >
+                ទាញយកកុនដែលបានជ្រើសរើស ({selectedPreviewUrls.length})
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </>
   );

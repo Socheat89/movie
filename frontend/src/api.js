@@ -1,19 +1,9 @@
 const API_BASE_URL = (function () {
   const LOCAL = 'http://localhost:8000';
+  const PRODUCTION = 'https://movie.mekongcyberunit.app/backend/public';
 
-  if (window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.protocol === 'file:') {
-    return LOCAL;
-  }
-
-  // Fallback production URL
-  if (window.location.origin.includes('github.io') || window.location.origin.includes('fastapicloud')) {
-    return 'https://backend-cb159e78.fastapicloud.dev';
-  }
-
-  // Under cPanel, backend is always located at /backend/public relative to the host root
-  return window.location.origin + '/backend/public';
+  // Use local server for localhost development, production otherwise
+  return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? LOCAL : PRODUCTION;
 })();
 
 async function apiFetch(path, options = {}) {
@@ -125,6 +115,20 @@ export const API = {
     return apiFetch('/api/admin/scrape', {
       method: 'POST',
       body: JSON.stringify({ url })
+    });
+  },
+
+  async scrapePreview(url) {
+    return apiFetch('/api/admin/scrape-preview', {
+      method: 'POST',
+      body: JSON.stringify({ url })
+    });
+  },
+
+  async scrapeImport(movies, category) {
+    return apiFetch('/api/admin/scrape-import', {
+      method: 'POST',
+      body: JSON.stringify({ movies, category })
     });
   },
 

@@ -669,4 +669,454 @@ class DramaController extends Controller
             })
         ];
     }
+
+    public function scrapePreview(Request $request)
+    {
+        $request->validate([
+            'url' => 'required|url',
+        ]);
+
+        $url = $request->input('url');
+
+        try {
+            $parsedUrl = parse_url($url);
+            $host = $parsedUrl['host'] ?? '';
+
+            if (strpos($host, 'khdiamond.net') !== false) {
+                // KhDiamond preview parser
+                $detectedGenre = 'Action';
+                $path = trim($parsedUrl['path'] ?? '', '/');
+                $segments = explode('/', $path);
+
+                if (count($segments) >= 2 && $segments[0] === 'genre') {
+                    $detectedGenre = urldecode($segments[1]);
+                    // Capitalize first letter of each word
+                    $detectedGenre = mb_convert_case($detectedGenre, MB_CASE_TITLE, "UTF-8");
+                }
+
+                $response = Http::withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                ])->timeout(20)->get($url);
+
+                if (!$response->successful()) {
+                    return response()->json(['detail' => 'Failed to retrieve the webpage. Status code: ' . $response->status()], 400);
+                }
+
+                $html = $response->body();
+                $movies = [];
+
+                // Parse post items
+                preg_match_all('/<article\s+id=["\']post-(\d+)["\']\s+class=["\']item\s+([^"\']+)["\']>([\s\S]*?)<\/article>/i', $html, $articles, PREG_SET_ORDER);
+
+                foreach ($articles as $art) {
+                    $content = $art[3];
+
+                    // URL
+                    preg_match('/href=["\'](https?:\/\/khdiamond\.net\/(?:movies|tvshows|seasons|episodes)\/[^"\']+)["\']/i', $content, $hrefMatch);
+                    $movieUrl = $hrefMatch[1] ?? '';
+                    if (!$movieUrl) continue;
+
+                    // Poster & Title
+                    preg_match('/<img\s+[^>]*src=["\']([^"\']+)["\'][^>]*alt=["\']([^"\']+)["\']/i', $content, $imgMatch);
+                    if (empty($imgMatch)) {
+                        preg_match('/<img\s+[^>]*alt=["\']([^"\']+)["\'][^>]*src=["\']([^"\']+)["\']/i', $content, $imgMatch);
+                    }
+
+                    $poster = '';
+                    $title = '';
+                    if (!empty($imgMatch)) {
+                        if (strpos($imgMatch[1], 'wp-content') !== false) {
+                            $poster = $imgMatch[1];
+                            $title = $imgMatch[2];
+                        } else {
+                            $poster = $imgMatch[2];
+                            $title = $imgMatch[1];
+                        }
+                    }
+
+                    if (empty($title)) {
+                        preg_match('/<h3><a[^>]*>([\s\S]*?)<\/a><\/h3>/i', $content, $h3Match);
+                        $title = !empty($h3Match[1]) ? trim(strip_tags($h3Match[1])) : 'Unknown Movie';
+                    }
+
+                    // Year
+                    preg_match('/<span>(\d{4})<\/span>/i', $content, $yearMatch);
+                    $year = $yearMatch[1] ?? '2025';
+
+                    // Rating
+                    preg_match('/<div\s+class=["\']rating["\']>([0-9.]+)<\/div>/i', $content, $ratingMatch);
+                    $rating = $ratingMatch[1] ?? '8.0';
+
+                    $movies[$movieUrl] = [
+                        'title' => html_entity_decode($title, ENT_QUOTES, 'UTF-8'),
+                        'url' => $movieUrl,
+                        'poster' => $poster,
+                        'year' => $year,
+                        'rating' => $rating
+                    ];
+                }
+
+                return response()->json([
+                    'detectedCategory' => $detectedGenre,
+                    'movies' => array_values($movies)
+                ]);
+            } else {
+                // Fallback to old freemovies2u scraper logic
+                $detectedGenre = 'Action';
+                $path = trim($parsedUrl['path'] ?? '', '/');
+                $segments = explode('/', $path);
+
+                if (count($segments) === 2 && $segments[0] === 'genre') {
+                    $genreName = $segments[1];
+                    $detectedGenre = ucfirst($genreName);
+                    
+                    $indexResponse = Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    ])->timeout(15)->get($url);
+                    
+                    if ($indexResponse->successful()) {
+                        $indexHtml = $indexResponse->body();
+                        if (preg_match('/href=["\']([^"\']*\bgenre\/' . preg_quote($genreName, '/') . '\/(\d+)\/?)["\']/i', $indexHtml, $idMatch)) {
+                            $url = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? 'freemovies2u.live') . '/' . ltrim($idMatch[1], '/');
+                            $path = trim(parse_url($url, PHP_URL_PATH), '/');
+                            $segments = explode('/', $path);
+                        }
+                    }
+                }
+
+                if (count($segments) >= 2 && $segments[0] === 'genre') {
+                    $detectedGenre = ucfirst($segments[1]);
+                }
+
+                $response = Http::withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                ])->timeout(15)->get($url);
+
+                if (!$response->successful()) {
+                    return response()->json(['detail' => 'Failed to retrieve the webpage. Status code: ' . $response->status()], 400);
+                }
+
+                $html = $response->body();
+                $movies = [];
+
+                preg_match_all('/<a\s+[^>]*href=["\']((?:https?:\/\/[a-z0-9.-]+)?\/movies\/[^"\']+)["\'][^>]*>([\s\S]*?)<\/a>/i', $html, $matches, PREG_SET_ORDER);
+
+                $baseHost = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? 'freemovies2u.live');
+
+                foreach ($matches as $match) {
+                    $href = $match[1];
+                    $innerHtml = $match[2];
+                    
+                    if (strpos($href, 'http') !== 0) {
+                        $href = rtrim($baseHost, '/') . '/' . ltrim($href, '/');
+                    }
+                    
+                    preg_match('/<p[^>]*>([\s\S]*?)<\/p>/i', $innerHtml, $titleMatch);
+                    if (empty($titleMatch)) {
+                        preg_match('/alt=["\']([^"\']+)["\']/i', $innerHtml, $titleMatch);
+                    }
+                    
+                    preg_match('/src=["\']([^"\']+)["\']/i', $innerHtml, $posterMatch);
+                    preg_match('/class=["\']year["\'][^>]*>([\s\S]*?)<\/span>/i', $innerHtml, $yearMatch);
+                    
+                    $title = !empty($titleMatch[1]) ? strip_tags(trim($titleMatch[1])) : 'Unknown Movie';
+                    $poster = !empty($posterMatch[1]) ? trim($posterMatch[1]) : '';
+                    $year = !empty($yearMatch[1]) ? trim(strip_tags($yearMatch[1])) : '2025';
+                    
+                    $movies[$href] = [
+                        'title' => $title,
+                        'url' => $href,
+                        'poster' => $poster,
+                        'year' => $year
+                    ];
+                }
+
+                return response()->json([
+                    'detectedCategory' => $detectedGenre,
+                    'movies' => array_values($movies)
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json(['detail' => 'Scraper preview error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function scrapeImport(Request $request)
+    {
+        $request->validate([
+            'category' => 'required|string',
+            'movies' => 'required|array',
+            'movies.*.title' => 'required|string',
+            'movies.*.url' => 'required|url',
+            'movies.*.poster' => 'nullable|string',
+            'movies.*.year' => 'nullable|string',
+            'movies.*.rating' => 'nullable|string',
+        ]);
+
+        $category = $request->input('category');
+        $moviesList = $request->input('movies');
+        $importedCount = 0;
+
+        foreach ($moviesList as $movie) {
+            $title = trim($movie['title']);
+            $url = $movie['url'];
+
+            // Check duplicate by title or source URL
+            $existing = Drama::where('title', $title)->orWhere('source', $url)->first();
+            if ($existing) {
+                if (empty($existing->genre) || $existing->genre !== $category) {
+                    $existing->update(['genre' => $category]);
+                }
+                continue;
+            }
+
+            try {
+                if (strpos($url, 'khdiamond.net') !== false) {
+                    // KhDiamond detail scraper
+                    $response = Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    ])->timeout(15)->get($url);
+
+                    if (!$response->successful()) continue;
+
+                    $html = $response->body();
+
+                    // Description extraction:
+                    // Movies use: <div itemprop="description" class="wp-content">
+                    // TV Shows use: <div class="wp-content"> (no itemprop wrapper)
+                    $description = 'No description available.';
+
+                    $descPatterns = [
+                        // Pattern 1: itemprop="description" wrapping a container (movie pages)
+                        '/<div[^>]+itemprop=["\']description["\'][^>]*>([\s\S]*?)<\/div>\s*<\/div>/i',
+                        // Pattern 2: itemprop="description" single div (fallback)
+                        '/<div[^>]+itemprop=["\']description["\'][^>]*>([\s\S]*?)<\/div>/i',
+                        // Pattern 3: .wp-content div (TV show pages)
+                        '/<div[^>]+class=["\'][^"\']*wp-content[^"\']*["\'][^>]*>([\s\S]*?)<\/div>/i',
+                    ];
+
+                    foreach ($descPatterns as $pattern) {
+                        if (preg_match($pattern, $html, $descMatch)) {
+                            $raw = strip_tags($descMatch[1]);
+                            $raw = html_entity_decode($raw, ENT_QUOTES, 'UTF-8');
+                            $raw = preg_replace('/\s+/', ' ', $raw);
+                            $raw = trim($raw);
+                            if (!empty($raw) && strlen($raw) > 10) {
+                                $description = $raw;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (strpos($url, '/movies/') !== false) {
+                        // Movie Page (Single Episode)
+                        preg_match('/data-post=["\'](\d+)["\']/i', $html, $postIdMatch);
+                        if (empty($postIdMatch)) {
+                            preg_match('/postid-(\d+)/i', $html, $postIdMatch);
+                        }
+                        $postId = $postIdMatch[1] ?? '';
+                        if (!$postId) continue;
+
+                        // Fetch player embed url via AJAX
+                        $ajaxRes = Http::asForm()->withHeaders([
+                            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+                            'Referer' => 'https://khdiamond.net/',
+                            'Origin' => 'https://khdiamond.net'
+                        ])->timeout(20)->post('https://khdiamond.net/wp-admin/admin-ajax.php', [
+                            'action' => 'doo_player_ajax',
+                            'post' => $postId,
+                            'nume' => '1',
+                            'type' => 'movie'
+                        ]);
+
+                        if ($ajaxRes->successful()) {
+                            $ajaxData = json_decode($ajaxRes->body(), true);
+                            $embedUrl = $ajaxData['embed_url'] ?? '';
+                            if ($embedUrl) {
+                                if (strpos($embedUrl, '//') === 0) {
+                                    $embedUrl = 'https:' . $embedUrl;
+                                }
+
+                                $dramaId = (string)Str::uuid();
+                                $drama = Drama::create([
+                                    'id' => $dramaId,
+                                    'title' => $title,
+                                    'titleKhmer' => '',
+                                    'description' => $description,
+                                    'poster' => $movie['poster'] ?? 'https://picsum.photos/300/450',
+                                    'genre' => $category,
+                                    'trending' => true,
+                                    'status' => 'Completed',
+                                    'totalEpisodes' => 1,
+                                    'source' => $url,
+                                    'year' => $movie['year'] ?? '2025',
+                                    'rating' => $movie['rating'] ?? '8.5',
+                                    'views' => 0
+                                ]);
+
+                                $drama->episodes()->create([
+                                    'id' => (string)Str::uuid(),
+                                    'episode' => 1,
+                                    'title' => 'Full Movie',
+                                    'videoUrl' => $embedUrl
+                                ]);
+
+                                $importedCount++;
+                            }
+                        }
+                    } else if (strpos($url, '/tvshows/') !== false) {
+                        // TV Show / Series (Multiple Episodes)
+                        $parts = explode('<div class="video-card">', $html);
+                        $parsedEpisodes = [];
+                        for ($i = 1; $i < count($parts); $i++) {
+                            $content = $parts[$i];
+                            preg_match('/href=["\'](https?:\/\/khdiamond\.net\/episodes\/[^"\']+)["\']/i', $content, $hrefMatch);
+                            $epUrl = $hrefMatch[1] ?? '';
+                            
+                            preg_match('/class=["\']title["\']>\s*([\s\S]*?)\s*<\/div>/i', $content, $titleMatch);
+                            $epTitle = !empty($titleMatch[1]) ? trim(strip_tags($titleMatch[1])) : '';
+                            
+                            preg_match('/S(\d+)\s*-\s*E(\d+)/i', $content, $metaMatch);
+                            $epNum = !empty($metaMatch[2]) ? intval($metaMatch[2]) : count($parsedEpisodes) + 1;
+                            
+                            if ($epUrl) {
+                                $parsedEpisodes[] = [
+                                    'url' => $epUrl,
+                                    'title' => html_entity_decode($epTitle ?: 'Episode ' . $epNum, ENT_QUOTES, 'UTF-8'),
+                                    'episode' => $epNum
+                                ];
+                            }
+                        }
+
+                        if (!empty($parsedEpisodes)) {
+                            // Reverse episodes array if they were listed in descending order (newest to oldest)
+                            // DooPlay TV Shows usually list episodes chronologically, but let's verify if first is Episode 1
+                            if (count($parsedEpisodes) > 1 && $parsedEpisodes[0]['episode'] > $parsedEpisodes[count($parsedEpisodes) - 1]['episode']) {
+                                $parsedEpisodes = array_reverse($parsedEpisodes);
+                            }
+
+                            $dramaId = (string)Str::uuid();
+                            $drama = Drama::create([
+                                'id' => $dramaId,
+                                'title' => $title,
+                                'titleKhmer' => '',
+                                'description' => $description,
+                                'poster' => $movie['poster'] ?? 'https://picsum.photos/300/450',
+                                'genre' => $category,
+                                'trending' => true,
+                                'status' => 'Ongoing',
+                                'totalEpisodes' => count($parsedEpisodes),
+                                'source' => $url,
+                                'year' => $movie['year'] ?? '2025',
+                                'rating' => $movie['rating'] ?? '8.5',
+                                'views' => 0
+                            ]);
+
+                            foreach ($parsedEpisodes as $ep) {
+                                // Fetch the individual episode watch page to get player embed
+                                $epResponse = Http::withHeaders([
+                                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                                ])->timeout(20)->get($ep['url']);
+
+                                $epEmbedUrl = '';
+
+                                if ($epResponse->successful()) {
+                                    $epHtml = $epResponse->body();
+                                    preg_match('/data-post=["\'](\d+)["\']/i', $epHtml, $epPostIdMatch);
+                                    if (empty($epPostIdMatch)) {
+                                        preg_match('/postid-(\d+)/i', $epHtml, $epPostIdMatch);
+                                    }
+                                    $epPostId = $epPostIdMatch[1] ?? '';
+
+                                    if ($epPostId) {
+                                        $epAjaxRes = Http::asForm()->withHeaders([
+                                            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+                                            'Referer' => 'https://khdiamond.net/',
+                                            'Origin' => 'https://khdiamond.net'
+                                        ])->timeout(20)->post('https://khdiamond.net/wp-admin/admin-ajax.php', [
+                                            'action' => 'doo_player_ajax',
+                                            'post' => $epPostId,
+                                            'nume' => '1',
+                                            'type' => 'tv'
+                                        ]);
+
+                                        if ($epAjaxRes->successful()) {
+                                            $epAjaxData = json_decode($epAjaxRes->body(), true);
+                                            $epEmbedUrl = $epAjaxData['embed_url'] ?? '';
+                                            if ($epEmbedUrl && strpos($epEmbedUrl, '//') === 0) {
+                                                $epEmbedUrl = 'https:' . $epEmbedUrl;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                $drama->episodes()->create([
+                                    'id' => (string)Str::uuid(),
+                                    'episode' => $ep['episode'],
+                                    'title' => $ep['title'],
+                                    'videoUrl' => $epEmbedUrl ?: ''
+                                ]);
+                            }
+
+                            $importedCount++;
+                        }
+                    }
+                } else {
+                    // Fallback to old freemovies2u watch page scraping logic
+                    $watchUrl = rtrim($url, '/') . '/watch.html';
+                    $watchResponse = Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    ])->timeout(15)->get($watchUrl);
+
+                    if ($watchResponse->successful()) {
+                        $watchHtml = $watchResponse->body();
+                        $videoUrl = '';
+
+                        if (preg_match('/<source\s+[^>]*src=["\']([^"\']+)["\']/i', $watchHtml, $srcMatch)) {
+                            $videoUrl = $srcMatch[1];
+                        } else if (preg_match('/player\.src\(\{\s*src:\s*[\'"]([^\'"]+)[\'"]/i', $watchHtml, $srcMatch)) {
+                            $videoUrl = $srcMatch[1];
+                        }
+
+                        if ($videoUrl) {
+                            $dramaId = (string)Str::uuid();
+                            $drama = Drama::create([
+                                'id' => $dramaId,
+                                'title' => $title,
+                                'titleKhmer' => '',
+                                'description' => 'Watch ' . $title . ' online free.',
+                                'poster' => $movie['poster'] ?? 'https://picsum.photos/300/450',
+                                'genre' => $category,
+                                'trending' => true,
+                                'status' => 'Completed',
+                                'totalEpisodes' => 1,
+                                'source' => $url,
+                                'year' => $movie['year'] ?? '2025',
+                                'rating' => $movie['rating'] ?? '8.5',
+                                'views' => 0
+                            ]);
+
+                            $drama->episodes()->create([
+                                'id' => (string)Str::uuid(),
+                                'episode' => 1,
+                                'title' => 'Full Movie',
+                                'videoUrl' => $videoUrl
+                            ]);
+
+                            $importedCount++;
+                        }
+                    }
+                }
+            } catch (\Exception $ex) {
+                // Log/ignore errors on single items to allow bulk import to continue
+                continue;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'importedCount' => $importedCount
+        ], 201);
+    }
 }

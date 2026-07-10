@@ -40,4 +40,6 @@ Route::post('/settings/sponsor-qr/upload', [SettingController::class, 'uploadSpo
 Route::post('/admin/login', [AuthController::class, 'login']);
 Route::post('/admin/change-password', [AuthController::class, 'changePassword']);
 Route::post('/admin/scrape', [DramaController::class, 'scrape']);
+Route::post('/admin/scrape-preview', [DramaController::class, 'scrapePreview']);
+Route::post('/admin/scrape-import', [DramaController::class, 'scrapeImport']);
 

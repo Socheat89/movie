@@ -1,0 +1,344 @@
+/* =============================================================
+   iOS Human Interface Design System — CSS Design Tokens
+   Movie App — Dark mode (forced for cinema aesthetic)
+   ============================================================= */
+
+/* 1. Color Primitives (iOS Dark Mode) */
+:root {
+  /* iOS Semantic Colors - Dark Mode */
+  --color-label: #ffffff;
+  --color-secondary-label: rgba(235, 235, 245, 0.6);
+  --color-tertiary-label: rgba(235, 235, 245, 0.3);
+  --color-quaternary-label: rgba(235, 235, 245, 0.18);
+
+  --color-system-background: #000000;
+  --color-secondary-system-background: #1c1c1e;
+  --color-tertiary-system-background: #2c2c2e;
+
+  --color-system-grouped-background: #000000;
+  --color-secondary-system-grouped-background: #1c1c1e;
+  --color-tertiary-system-grouped-background: #2c2c2e;
+
+  --color-separator: rgba(84, 84, 88, 0.65);
+  --color-opaque-separator: #38383a;
+
+  --color-link: #0a84ff;
+  --color-system-blue: #0a84ff;
+  --color-system-green: #30d158;
+  --color-system-red: #ff453a;
+  --color-system-orange: #ff9f0a;
+  --color-system-yellow: #ffd60a;
+  --color-system-purple: #bf5af2;
+  --color-system-pink: #ff375f;
+  --color-system-teal: #64d2ff;
+  --color-system-indigo: #5e5ce6;
+  --color-system-gray: #8e8e93;
+  --color-system-gray2: #636366;
+  --color-system-gray3: #48484a;
+  --color-system-gray4: #3a3a3c;
+  --color-system-gray5: #2c2c2e;
+  --color-system-gray6: #1c1c1e;
+
+  /* Brand Colors (Movie App) */
+  --color-brand-primary: #e50914;
+  --color-brand-secondary: #1a1a1a;
+  --color-brand-primary-hover: #ff3b30;
+  --color-brand-primary-light: #ff453a;
+  --color-brand-gradient: linear-gradient(135deg, #e50914 0%, #ff3b30 100%);
+  --color-brand-gradient-hover: linear-gradient(135deg, #b20710 0%, #ff2d1f 100%);
+
+  /* Rating Colors */
+  --color-rating-gold: #ffc107;
+  --color-rating-gray: #636366;
+
+  /* Accent Colors */
+  --color-accent-purple: #bf5af2;
+  --color-accent-blue: #0a84ff;
+  --color-accent-cyan: #64d2ff;
+  --color-accent-green: #30d158;
+  --color-accent-orange: #ff9f0a;
+
+  /* Backward Compatibility Aliases for Icon colors */
+  --text-2: var(--color-system-gray);
+  --text-3: var(--color-system-gray2);
+  --accent: var(--color-brand-primary);
+  --accent-lt: var(--color-brand-primary-light);
+  --accent-glow: rgba(229, 9, 20, 0.15);
+  --yellow: var(--color-system-yellow);
+  --green: var(--color-system-green);
+  --red: var(--color-system-red);
+}
+
+/* 2. Semantic Color Aliases */
+:root {
+  /* Backgrounds */
+  --bg-primary: var(--color-system-background);
+  --bg-secondary: var(--color-secondary-system-background);
+  --bg-tertiary: var(--color-tertiary-system-background);
+  --bg-grouped: var(--color-system-grouped-background);
+  --bg-card: var(--color-secondary-system-grouped-background);
+  --bg-card-hover: var(--color-tertiary-system-grouped-background);
+
+  /* Text */
+  --text-primary: var(--color-label);
+  --text-secondary: var(--color-secondary-label);
+  --text-tertiary: var(--color-tertiary-label);
+  --text-quaternary: var(--color-quaternary-label);
+  --text-on-brand: #ffffff;
+  --text-link: var(--color-link);
+
+  /* Borders */
+  --border-primary: var(--color-separator);
+  --border-opaque: var(--color-opaque-separator);
+  --border-focus: var(--color-system-blue);
+
+  /* Brand */
+  --brand-primary: var(--color-brand-primary);
+  --brand-primary-hover: var(--color-brand-primary-hover);
+  --brand-primary-light: var(--color-brand-primary-light);
+  --brand-secondary: var(--color-brand-secondary);
+
+  /* Status */
+  --success: var(--color-system-green);
+  --warning: var(--color-system-yellow);
+  --error: var(--color-system-red);
+  --info: var(--color-system-blue);
+
+  /* Rating */
+  --rating-gold: var(--color-rating-gold);
+  --rating-gray: var(--color-rating-gray);
+}
+
+/* 3. iOS Materials (Frosted Glass) */
+:root {
+  --ios-material-thin: rgba(30, 30, 30, 0.5);
+  --ios-material-regular: rgba(30, 30, 30, 0.72);
+  --ios-material-thick: rgba(30, 30, 30, 0.85);
+  --ios-material-ultra-thin: rgba(30, 30, 30, 0.3);
+
+  --ios-blur-thin: 20px;
+  --ios-blur-regular: 30px;
+  --ios-blur-thick: 40px;
+  --ios-blur-ultra: 50px;
+
+  --ios-vibrancy-light: rgba(255, 255, 255, 0.06);
+  --ios-vibrancy-medium: rgba(255, 255, 255, 0.1);
+  --ios-vibrancy-heavy: rgba(255, 255, 255, 0.16);
+}
+
+/* 4. Typography Scale (SF Pro) */
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  --font: var(--font-sans);
+
+  /* Font Sizes */
+  --text-xs: 0.6875rem;    /* 11px - Caption 2 */
+  --text-sm: 0.75rem;      /* 12px - Caption 1 */
+  --text-base: 0.8125rem;  /* 13px - Footnote */
+  --text-md: 0.875rem;     /* 14px */
+  --text-lg: 0.9375rem;    /* 15px - Subheadline */
+  --text-xl: 1rem;         /* 16px - Callout */
+  --text-2xl: 1.0625rem;   /* 17px - Body */
+  --text-3xl: 1.125rem;    /* 18px */
+  --text-4xl: 1.25rem;     /* 20px - Title 3 */
+  --text-5xl: 1.375rem;    /* 22px - Title 2 */
+  --text-6xl: 1.75rem;     /* 28px - Title 1 */
+  --text-7xl: 2.125rem;    /* 34px - Large Title */
+
+  /* Line Heights */
+  --leading-tight: 1.15;
+  --leading-snug: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+  --leading-loose: 1.75;
+
+  /* Font Weights */
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Letter Spacing */
+  --tracking-tight: -0.04em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.02em;
+
+  /* Text Styles (Composed) */
+  --style-large-title: var(--font-bold) var(--text-7xl) / var(--leading-tight) var(--font-sans);
+  --style-title-1: var(--font-bold) var(--text-6xl) / var(--leading-tight) var(--font-sans);
+  --style-title-2: var(--font-bold) var(--text-5xl) / var(--leading-snug) var(--font-sans);
+  --style-title-3: var(--font-semibold) var(--text-4xl) / var(--leading-snug) var(--font-sans);
+  --style-headline: var(--font-semibold) var(--text-2xl) / var(--leading-normal) var(--font-sans);
+  --style-body: var(--font-regular) var(--text-2xl) / var(--leading-relaxed) var(--font-sans);
+  --style-body-emphasized: var(--font-semibold) var(--text-2xl) / var(--leading-relaxed) var(--font-sans);
+  --style-callout: var(--font-regular) var(--text-xl) / var(--leading-relaxed) var(--font-sans);
+  --style-subheadline: var(--font-regular) var(--text-lg) / var(--leading-relaxed) var(--font-sans);
+  --style-subheadline-emphasized: var(--font-semibold) var(--text-lg) / var(--leading-relaxed) var(--font-sans);
+  --style-footnote: var(--font-regular) var(--text-base) / var(--leading-normal) var(--font-sans);
+  --style-footnote-emphasized: var(--font-semibold) var(--text-base) / var(--leading-normal) var(--font-sans);
+  --style-caption-1: var(--font-regular) var(--text-sm) / var(--leading-normal) var(--font-sans);
+  --style-caption-2: var(--font-regular) var(--text-xs) / var(--leading-normal) var(--font-sans);
+  --style-caption-2-emphasized: var(--font-semibold) var(--text-xs) / var(--leading-normal) var(--font-sans);
+}
+
+/* 5. Spacing Scale (8pt Grid) */
+:root {
+  --space-0: 0;
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-7: 1.75rem;   /* 28px */
+  --space-8: 2rem;      /* 32px */
+  --space-9: 2.25rem;   /* 36px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+}
+
+/* 6. Border Radius */
+:root {
+  --radius-none: 0;
+  --radius-sm: 0.25rem;   /* 4px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-2xl: 1.25rem;  /* 20px */
+  --radius-3xl: 1.5rem;   /* 24px */
+  --radius-full: 9999px;
+}
+
+/* 7. Component Sizes */
+:root {
+  --nav-height: 48px;
+  --nav-height-large: 56px;
+  --tab-bar-height: 49px;
+  --tab-bar-height-compact: 50px;
+  --touch-target: 44px;
+  --touch-target-sm: 36px;
+  --input-height: 36px;
+  --input-height-lg: 44px;
+  --btn-height: 44px;
+  --btn-height-sm: 32px;
+  --btn-height-lg: 50px;
+
+  /* Safe Areas */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+/* 8. Shadows */
+:root {
+  --shadow-none: none;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(229, 9, 20, 0.4);
+  --shadow-glow-lg: 0 0 40px rgba(229, 9, 20, 0.5);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* 9. Transitions & Animations (iOS Standard) */
+:root {
+  --duration-instant: 0ms;
+  --duration-fast: 100ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --duration-slower: 450ms;
+  --duration-slowest: 550ms;
+
+  /* iOS Standard Easings */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.42, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.58, 1);
+  --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+
+  /* iOS Spring Physics */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-spring-heavy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-ios: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-ios-spring: cubic-bezier(0.28, 0.11, 0.32, 1);
+
+  /* Composed transitions */
+  --transition-fast: var(--duration-fast) var(--ease-out);
+  --transition-normal: var(--duration-normal) var(--ease-ios);
+  --transition-smooth: var(--duration-slow) var(--ease-smooth);
+  --transition-spring: var(--duration-slower) var(--ease-spring);
+  --transition-ios: var(--duration-slow) var(--ease-ios-spring);
+}
+
+/* 10. Z-Index Scale */
+:root {
+  --z-hide: -1;
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+  --z-toast: 800;
+}
+
+/* 11. Breakpoints */
+:root {
+  --bp-sm: 375px;
+  --bp-md: 414px;
+  --bp-lg: 768px;
+  --bp-xl: 1024px;
+  --bp-2xl: 1280px;
+}
+
+/* 12. Focus Visible (Accessibility) */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* 13. Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+    --duration-slowest: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 14. High Contrast */
+@media (forced-colors: active) {
+  :root {
+    --color-brand-primary: CanvasText;
+    --color-brand-primary-hover: CanvasText;
+    --color-system-blue: CanvasText;
+    --color-system-green: CanvasText;
+    --color-system-red: CanvasText;
+    --color-system-yellow: CanvasText;
+    --color-rating-gold: CanvasText;
+  }
+}
