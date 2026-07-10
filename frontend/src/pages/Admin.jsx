@@ -713,7 +713,7 @@ export default function Admin({ onNavigate }) {
                 <input
                   className="form-input"
                   type="url"
-                  placeholder="Paste KhmerKomsan movie URL..."
+                  placeholder="Paste URL (KhmerKomsan, KhDiaMonD, or TMDB)..."
                   value={importUrl}
                   onChange={e => setImportUrl(e.target.value)}
                   style={{ margin: 0, flex: 1 }}

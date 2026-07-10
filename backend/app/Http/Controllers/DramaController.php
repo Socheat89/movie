@@ -268,6 +268,17 @@ class DramaController extends Controller
                 ], 201);
             }
 
+            // ── TMDB routing ────────────────────────────────
+            $parsedHost = parse_url($url, PHP_URL_HOST) ?? '';
+            if (strpos($parsedHost, 'themoviedb.org') !== false) {
+                // Single movie or TV show page
+                if (preg_match('#/(movie|tv)/(\d+)#', $url, $tmdbMatch)) {
+                    return $this->scrapeTmdb($url, $tmdbMatch[1], $tmdbMatch[2]);
+                }
+                // List / discover page – bulk import
+                return $this->scrapeTmdbList($url);
+            }
+
             // Fallback: original page scraping (single or HTML list crawling)
             $response = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -1117,6 +1128,213 @@ class DramaController extends Controller
         return response()->json([
             'success' => true,
             'importedCount' => $importedCount
+        ], 201);
+    }
+
+    // ── TMDB: scrape a single /movie/{id} or /tv/{id} page ──────────
+    private function scrapeTmdb($url, $type, $tmdbId)
+    {
+        $response = Http::withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        ])->timeout(15)->get($url);
+
+        if (!$response->successful()) {
+            return response()->json(['detail' => 'Failed to fetch TMDB page (HTTP ' . $response->status() . ')'], 400);
+        }
+
+        $html = $response->body();
+
+        // Title
+        preg_match('/<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']*)["\']/', $html, $tMatch);
+        $title = !empty($tMatch[1]) ? html_entity_decode(trim($tMatch[1])) : 'TMDB Import';
+        $title = preg_replace('/\s*[-—]\s*The Movie Database.*$/i', '', $title);
+
+        // Check duplicate
+        $existing = Drama::where('title', $title)->first();
+        if ($existing) {
+            return response()->json([
+                'id' => $existing->id,
+                'title' => $existing->title,
+                'episodeCount' => $existing->episodes()->count(),
+                'status' => 'already_exists'
+            ], 200);
+        }
+
+        // Poster
+        preg_match('/<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']*)["\']/', $html, $pMatch);
+        $poster = !empty($pMatch[1]) ? $pMatch[1] : 'https://picsum.photos/300/450';
+
+        // Description
+        preg_match('/<meta[^>]*property=["\']og:description["\'][^>]*content=["\']([^"\']*)["\']/', $html, $dMatch);
+        $description = !empty($dMatch[1]) ? html_entity_decode($dMatch[1]) : '';
+
+        // Year – look for release_date in JSON-LD or page text
+        preg_match('/release_date["\']?\s*[:=]\s*["\']?(\d{4})/', $html, $yMatch);
+        if (empty($yMatch[1])) {
+            preg_match('/(\d{2}\/\d{2}\/(\d{4}))/', $html, $yMatch2);
+            $year = !empty($yMatch2[2]) ? $yMatch2[2] : '2025';
+        } else {
+            $year = $yMatch[1];
+        }
+
+        $dramaId = (string) Str::uuid();
+        $drama = Drama::create([
+            'id' => $dramaId,
+            'title' => $title,
+            'titleKhmer' => '',
+            'description' => $description,
+            'poster' => $poster,
+            'genre' => '',
+            'trending' => true,
+            'status' => '',
+            'totalEpisodes' => 1,
+            'source' => 'tmdb',
+            'year' => $year,
+            'rating' => '0',
+            'views' => 0
+        ]);
+
+        $epTitle = $type === 'movie' ? 'Full Movie' : 'Episode 1';
+        $drama->episodes()->create([
+            'id' => 'ep_' . (string) Str::uuid(),
+            'episode' => 1,
+            'title' => $epTitle,
+            'videoUrl' => ''
+        ]);
+
+        return response()->json([
+            'id' => $drama->id,
+            'title' => $drama->title,
+            'episodeCount' => 1,
+            'status' => 'imported'
+        ], 201);
+    }
+
+    // ── TMDB: bulk scrape a list / discover page ────────────────────
+    private function scrapeTmdbList($url)
+    {
+        $response = Http::withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        ])->timeout(20)->get($url);
+
+        if (!$response->successful()) {
+            return response()->json(['detail' => 'Failed to fetch TMDB list page (HTTP ' . $response->status() . ')'], 400);
+        }
+
+        $html = $response->body();
+
+        // Find all individual movie/tv links on the page
+        preg_match_all('#href=["\'](/(?:movie|tv)/(\d+)[^"\']*)["\']#', $html, $matches, PREG_SET_ORDER);
+
+        if (empty($matches)) {
+            return response()->json(['detail' => 'No movie or TV links found on this TMDB page.'], 400);
+        }
+
+        // De-duplicate by TMDB ID
+        $seen = [];
+        $uniqueMatches = [];
+        foreach ($matches as $m) {
+            $id = $m[2];
+            if (!isset($seen[$id])) {
+                $seen[$id] = true;
+                $uniqueMatches[] = $m;
+            }
+        }
+
+        $imported = [];
+        $limit = 20;
+        $count = 0;
+
+        foreach ($uniqueMatches as $m) {
+            if ($count >= $limit) break;
+
+            $itemPath = $m[1]; // e.g. /movie/12345-slug
+            $itemUrl = 'https://www.themoviedb.org' . $itemPath;
+            $type = strpos($itemPath, '/movie/') === 0 ? 'movie' : 'tv';
+            $tmdbId = $m[2];
+
+            try {
+                $subResp = Http::withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+                ])->timeout(15)->get($itemUrl);
+
+                if (!$subResp->successful()) continue;
+
+                $subHtml = $subResp->body();
+
+                // Extract year
+                preg_match('/release_date["\']?\s*[:=]\s*["\']?(\d{4})/', $subHtml, $yMatch);
+                if (empty($yMatch[1])) {
+                    preg_match('/(\d{2}\/\d{2}\/(\d{4}))/', $subHtml, $yMatch2);
+                    $year = !empty($yMatch2[2]) ? $yMatch2[2] : null;
+                } else {
+                    $year = $yMatch[1];
+                }
+
+                // Filter: only 2025+
+                if (!$year || intval($year) < 2025) continue;
+
+                // Title
+                preg_match('/<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']*)["\']/', $subHtml, $tMatch);
+                $title = !empty($tMatch[1]) ? html_entity_decode(trim($tMatch[1])) : 'TMDB Import #' . $tmdbId;
+                $title = preg_replace('/\s*[-—]\s*The Movie Database.*$/i', '', $title);
+
+                // Skip duplicate
+                if (Drama::where('title', $title)->exists()) continue;
+
+                // Poster
+                preg_match('/<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']*)["\']/', $subHtml, $pMatch);
+                $poster = !empty($pMatch[1]) ? $pMatch[1] : 'https://picsum.photos/300/450';
+
+                // Description
+                preg_match('/<meta[^>]*property=["\']og:description["\'][^>]*content=["\']([^"\']*)["\']/', $subHtml, $dMatch);
+                $description = !empty($dMatch[1]) ? html_entity_decode($dMatch[1]) : '';
+
+                $dramaId = (string) Str::uuid();
+                $drama = Drama::create([
+                    'id' => $dramaId,
+                    'title' => $title,
+                    'titleKhmer' => '',
+                    'description' => $description,
+                    'poster' => $poster,
+                    'genre' => '',
+                    'trending' => true,
+                    'status' => '',
+                    'totalEpisodes' => 1,
+                    'source' => 'tmdb',
+                    'year' => $year,
+                    'rating' => '0',
+                    'views' => 0
+                ]);
+
+                $epTitle = $type === 'movie' ? 'Full Movie' : 'Episode 1';
+                $drama->episodes()->create([
+                    'id' => 'ep_' . (string) Str::uuid(),
+                    'episode' => 1,
+                    'title' => $epTitle,
+                    'videoUrl' => ''
+                ]);
+
+                $imported[] = [
+                    'id' => $drama->id,
+                    'title' => $drama->title,
+                    'episodeCount' => 1,
+                    'status' => 'imported'
+                ];
+                $count++;
+            } catch (\Exception $ex) {
+                continue;
+            }
+        }
+
+        if (empty($imported)) {
+            return response()->json(['detail' => 'No TMDB items matching year >= 2025 found on this page.'], 400);
+        }
+
+        return response()->json([
+            'isBulk' => true,
+            'imported' => $imported,
+            'importedCount' => count($imported)
         ], 201);
     }
 }

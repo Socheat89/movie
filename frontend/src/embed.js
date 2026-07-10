@@ -66,6 +66,7 @@ export const Embed = {
     if (/vimeo/.test(url))                                  return 'vimeo';
     if (/dailymotion/.test(url))                            return 'dailymotion';
     if (/\.(mp4|webm|ogg|m3u8|mkv)(\?|$|#)/i.test(url))   return 'direct';
+    if (/khdiamond\.net\/episodes\//.test(url))            return 'khdiamond';
     return 'other';
   }
 };

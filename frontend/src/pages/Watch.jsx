@@ -254,6 +254,33 @@ export default function Watch({ dramaId, onNavigate }) {
       );
     }
 
+    if (type === 'khdiamond') {
+      return (
+        <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+          <iframe
+            key={url}
+            src={url}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+            allowFullScreen
+            loading="lazy"
+            title="KhDiaMonD Episode Player"
+            style={{ width: '100%', flex: 1, minHeight: 0, border: 'none' }}
+          />
+          <div style={{
+            padding: '8px 12px', background: 'rgba(0,0,0,0.6)', display: 'flex',
+            alignItems: 'center', gap: 10, fontSize: '13px', color: 'var(--text-secondary)'
+          }}>
+            <span>💡 បើវីដេអូមិនចាក់ — </span>
+            <a href={url} target="_blank" rel="noopener noreferrer"
+              style={{ color: 'var(--brand-primary)', fontWeight: 600, textDecoration: 'none' }}>
+              បើក KhDiaMonD ដោយផ្ទាល់ ↗
+            </a>
+          </div>
+        </div>
+      );
+    }
+
     const embedUrl = Embed.getEmbedUrl(url);
     return (
       <iframe key={url} src={embedUrl} frameBorder="0"
