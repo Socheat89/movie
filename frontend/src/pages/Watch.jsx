@@ -199,19 +199,50 @@ export default function Watch({ dramaId, onNavigate }) {
   };
 
   const renderPlayer = (url) => {
-    if (!url) return (
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        color: 'var(--text-tertiary)', gap: 'var(--space-3)',
-        textAlign: 'center', padding: 'var(--space-8)'
-      }}>
-        <PlayIcon size={44} style={{ color: 'var(--text-tertiary)', opacity: 0.4 }} />
-        <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-secondary)' }}>No video selected</p>
-        <small style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Select an episode to start watching.</small>
-      </div>
-    );
+    if (!url) {
+      const isAdmin = API.isAuthed();
+      return (
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          color: 'var(--text-tertiary)', gap: 'var(--space-3)',
+          textAlign: 'center', padding: 'var(--space-8)'
+        }}>
+          <PlayIcon size={44} style={{ color: 'var(--text-tertiary)', opacity: 0.4 }} />
+          {activeEpisode ? (
+            <>
+              <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-secondary)', margin: '0 0 4px' }}>
+                វីដេអូមិនទាន់បានបញ្ចូលនៅឡើយទេ
+              </p>
+              <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', margin: '0' }}>
+                Video is not available yet for this episode.
+              </p>
+              {isAdmin && (
+                <div style={{
+                  marginTop: '12px',
+                  padding: '10px 14px',
+                  backgroundColor: 'rgba(255, 149, 0, 0.1)',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1px dashed rgba(255, 149, 0, 0.3)',
+                  maxWidth: '360px',
+                  fontSize: '13px',
+                  color: 'var(--color-system-orange)',
+                  lineHeight: '1.5'
+                }}>
+                  💡 <strong>សម្រាប់ Admin:</strong> សូមចូលទៅកាន់ Admin Dashboard ➔ Episodes ➔ ជ្រើសរើសរឿងនេះ រួចបញ្ចូលតំណភ្ជាប់វីដេអូ (Video URL)។
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-secondary)' }}>No video selected</p>
+              <small style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Select an episode to start watching.</small>
+            </>
+          )}
+        </div>
+      );
+    }
 
     const type = Embed.getType(url);
 
